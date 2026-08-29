@@ -122,9 +122,15 @@ def stable_pearson(y_true, y_pred) -> float:
 
 
 def median_impute_train_val(X_train, X_val):
-    """Median-impute NaNs using stats fit on the TRAIN fold only."""
+    """Median-impute NaNs (and +/-inf, treated as missing) using stats fit
+    on the TRAIN fold only. Tree models (XGBoost/RandomForest/LightGBM)
+    tolerate inf silently, but linear models like Ridge will throw
+    'array must not contain infs or NaNs' if any slip through, so we
+    sanitize inf -> NaN before imputing regardless of MODEL_NAME."""
     X_train = X_train.astype(np.float32, copy=True)
     X_val = X_val.astype(np.float32, copy=True)
+    X_train[np.isinf(X_train)] = np.nan
+    X_val[np.isinf(X_val)] = np.nan
     medians = np.nanmedian(X_train, axis=0)
     medians = np.where(np.isnan(medians), 0.0, medians)
     tr_rows, tr_cols = np.where(np.isnan(X_train))
@@ -135,8 +141,10 @@ def median_impute_train_val(X_train, X_val):
 
 
 def median_impute_full(X):
-    """Median-impute full data for the final production model only."""
+    """Median-impute full data (NaN and +/-inf) for the final production
+    model only."""
     X = X.astype(np.float32, copy=True)
+    X[np.isinf(X)] = np.nan
     medians = np.nanmedian(X, axis=0)
     medians = np.where(np.isnan(medians), 0.0, medians)
     rows, cols = np.where(np.isnan(X))
@@ -199,9 +207,16 @@ def build_champion(seed: int, n_estimators: int = N_ESTIMATORS):
         )
     elif MODEL_NAME == "ridge":
         from sklearn.linear_model import Ridge
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import StandardScaler
         # Linear baseline — useful to show whether the tree models are
         # actually adding value over a simple fit. n_estimators is unused.
-        return Ridge(alpha=1.0, random_state=seed)
+        # Wrapped in StandardScaler: Ridge's regularization penalizes all
+        # coefficients on the same scale, so unscaled features (some near
+        # 0, others large) would get penalized very unevenly and can also
+        # cause numerical instability in the solver even after inf/NaN
+        # cleanup. Trees don't need this since splits are scale-invariant.
+        return make_pipeline(StandardScaler(), Ridge(alpha=1.0, random_state=seed))
     else:
         raise ValueError(f"Unknown MODEL_NAME: {MODEL_NAME!r}")
 
