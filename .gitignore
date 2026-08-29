@@ -1,0 +1,14 @@
+# Model training artifacts — large/binary, regenerate locally, don't version them.
+# CSV/JSON summaries produced alongside them (fold results, per-seed
+# summaries, feature importance rankings, metadata) ARE meant to be tracked
+# since they're small and are what the team actually compares/reports.
+*.pkl
+*.npy
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS/editor cruft
+.DS_Store
+.ipynb_checkpoints/

@@ -67,12 +67,14 @@ N_ESTIMATORS = 400
 
 # --- Model switch -------------------------------------------------------
 # Options: "xgboost" (default/original champion), "random_forest",
-# "lightgbm", "ridge". Add more cases in build_champion() (CELL 3b) as
-# needed. Only installs the extra package for whichever model you pick.
+# "lightgbm", "ridge", "catboost". Add more cases in build_champion()
+# (CELL 3b) as needed. Only installs the extra package for whichever
+# model you pick.
 MODEL_NAME = "xgboost"
 
 _EXTRA_PACKAGE_BY_MODEL = {
     "lightgbm": "lightgbm",
+    "catboost": "catboost",
 }
 if MODEL_NAME in _EXTRA_PACKAGE_BY_MODEL:
     install_if_missing(_EXTRA_PACKAGE_BY_MODEL[MODEL_NAME])
@@ -204,6 +206,20 @@ def build_champion(seed: int, n_estimators: int = N_ESTIMATORS):
             n_estimators=n_estimators, learning_rate=0.05, max_depth=4,
             subsample=0.8, colsample_bytree=0.8,
             random_state=seed, n_jobs=-1, verbosity=-1,
+        )
+    elif MODEL_NAME == "catboost":
+        from catboost import CatBoostRegressor
+        # depth=4 / learning_rate=0.05 mirror the XGBoost champion params
+        # for a fair comparison. subsample+bootstrap_type="Bernoulli" is
+        # CatBoost's equivalent of XGBoost's row subsampling; rsm is its
+        # column-subsampling equivalent (colsample_bytree). CatBoost
+        # natively handles NaN, but our data is already imputed upstream
+        # so this is just a safety net.
+        return CatBoostRegressor(
+            iterations=n_estimators, learning_rate=0.05, depth=4,
+            bootstrap_type="Bernoulli", subsample=0.8, rsm=0.8,
+            random_seed=seed, thread_count=-1, verbose=False,
+            allow_writing_files=False,
         )
     elif MODEL_NAME == "ridge":
         from sklearn.linear_model import Ridge
