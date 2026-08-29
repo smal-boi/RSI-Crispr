@@ -1,0 +1,46 @@
+{
+  "experiment": "five_seed_baseline_xgboost_top300",
+  "project": "Enhancing sgRNA efficiency in CRISPR-Cas9 genome editing",
+  "species": "Escherichia coli",
+  "model_name": "xgboost",
+  "data_path": "ecoli_feature_matrix.csv",
+  "target_column": "cut.score",
+  "dropped_columns": [
+    "cut.score",
+    "sgRNAID"
+  ],
+  "all_nan_columns_dropped": [],
+  "x_shape_full": [
+    13880,
+    6232
+  ],
+  "x_shape_selected_final_production": [
+    13880,
+    300
+  ],
+  "seeds": [
+    41,
+    42,
+    43,
+    44,
+    45
+  ],
+  "n_splits": 5,
+  "n_features": 300,
+  "n_estimators_selector": 300,
+  "n_estimators_final_model": 400,
+  "final_production_seed": 42,
+  "feature_order_hash": "41292fa0eff6d606cfa9585ad80c09634844152121bada42c4bf3035c572d0f4",
+  "overall_mean_r2_across_seed_means": 0.29368323920811806,
+  "overall_std_r2_across_seed_means": 0.0014541747684581581,
+  "overall_mean_spearman_across_seed_means": 0.5278198238136016,
+  "overall_std_spearman_across_seed_means": 0.0014074310989160373,
+  "overall_mean_pearson_across_seed_means": 0.542439069175621,
+  "overall_std_pearson_across_seed_means": 0.0013171081471294091,
+  "overall_mean_mse_across_seed_means": 79.84528216093989,
+  "overall_std_mse_across_seed_means": 0.16303856231539005,
+  "engineered_features_loaded": 0,
+  "regional_qct_loaded": 0,
+  "eng_extra_loaded": 0,
+  "note": "Leakage-safe five-seed evaluation. Feature selector is always XGBoost, fit inside each CV training fold only; champion model is MODEL_NAME, also fit per fold on the selected features. The final production model is trained on all data and is not a validation score."
+}
