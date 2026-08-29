@@ -1,7 +1,13 @@
-# Model training artifacts — large/binary, regenerate locally, don't version them.
-# CSV/JSON summaries produced alongside them (fold results, per-seed
-# summaries, feature importance rankings, metadata) ARE meant to be tracked
-# since they're small and are what the team actually compares/reports.
+# Model training output folders — regenerate locally by rerunning the
+# baseline script, don't version any of it (binaries or the CSV/JSON
+# summaries). Covers both naming conventions in use:
+#   <model_name>_ecoli/                          e.g. lightgbm_ecoli/
+#   five_seed_champion_ecoli_<model_name>_baseline/
+*_ecoli/
+five_seed_champion_ecoli_*/
+
+# Model artifacts by extension, in case an output folder doesn't match
+# either pattern above.
 *.pkl
 *.npy
 
