@@ -85,7 +85,7 @@ SEEDS = [41, 42, 43, 44, 45]
 FINAL_PRODUCTION_SEED = 42
 SHUFFLE = True
 
-OUTPUT_DIR = f"five_seed_champion_ecoli_{MODEL_NAME}_baseline"
+OUTPUT_DIR = f"{MODEL_NAME}_ecoli"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 NON_FEATURE_COLUMNS = [
