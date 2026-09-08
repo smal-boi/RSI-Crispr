@@ -50,6 +50,8 @@ from scipy.stats import spearmanr, pearsonr
 from sklearn.model_selection import KFold
 from sklearn.metrics import r2_score, mean_squared_error
 
+drive.mount("/content/drive")
+
 # %% CELL 2 — Config
 # Put this script in the same folder as ecoli_feature_matrix.csv, or edit DATA_PATH.
 DATA_PATH = "ecoli_feature_matrix.csv"
