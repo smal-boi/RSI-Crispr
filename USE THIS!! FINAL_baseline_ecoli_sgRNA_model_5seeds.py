@@ -55,7 +55,15 @@ drive.mount("/content/drive")
 
 # %% CELL 2 — Config
 # Put this script in the same folder as ecoli_feature_matrix.csv, or edit DATA_PATH.
-DATA_PATH = "ecoli_feature_matrix.csv"
+
+#Ecoli data:
+#DATA_PATH = "/content/drive/MyDrive/CRISPR_Project/ecoli_feature_matrix.csv"
+DATA_PATH = "/content/drive/MyDrive/CRISPR_Project/ecoli_feature_matrix_seed_nonadd.csv"
+
+#Human data
+#DATA_PATH = "/content/drive/MyDrive/CRISPR_Project/human_feature_matrix.csv"
+#DATA_PATH = "/content/drive/MyDrive/CRISPR_Project/human_feature_matrix_seed_nonadd.csv"
+
 TARGET_COLUMN = "cut.score"
 
 # Frozen baseline settings.
@@ -69,6 +77,11 @@ SHUFFLE = True
 
 OUTPUT_DIR = "five_seed_champion_ecoli_xgboost_baseline"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+CV_MODEL_DIR = os.path.join(OUTPUT_DIR, "cv_models")
+CV_FOLD_DIR = os.path.join(OUTPUT_DIR, "cv_folds")
+os.makedirs(CV_MODEL_DIR, exist_ok=True)
+os.makedirs(CV_FOLD_DIR, exist_ok=True)
+cv_manifest_entries = {}
 
 NON_FEATURE_COLUMNS = [
     "sgRNAID", "sequence", "Sequence", "sgRNA", "sgrna",
@@ -238,7 +251,7 @@ def run_cv_for_seed(seed: int, n_features: int = N_FEATURES, n_estimators: int =
         y_tr, y_val = y[train_idx], y[val_idx]
 
         # Fit imputer on training fold only.
-        X_tr, X_val, _ = median_impute_train_val(X_tr_raw, X_val_raw)
+        X_tr, X_val, medians = median_impute_train_val(X_tr_raw, X_val_raw)
 
         # Fit selector on training fold only.
         selector = xgb.XGBRegressor(**selector_params(seed))
@@ -254,6 +267,36 @@ def run_cv_for_seed(seed: int, n_features: int = N_FEATURES, n_estimators: int =
         # Train final model on selected features only.
         model = xgb.XGBRegressor(**champion_params(seed))
         model.fit(X_tr[:, top_idx], y_tr)
+
+        # Preserve the exact fitted validation model and its preprocessing contract.
+        artifact_name = f"seed_{seed}_fold_{fold}.json"
+        model_path = os.path.join(CV_MODEL_DIR, artifact_name)
+        fold_path = os.path.join(CV_FOLD_DIR, artifact_name)
+        model.save_model(model_path)
+        fold_metadata = {
+            "seed": int(seed),
+            "fold": int(fold),
+            "train_indices": train_idx.tolist(),
+            "validation_indices": val_idx.tolist(),
+            "selected_feature_indices": top_idx.tolist(),
+            "selected_feature_names": selected_names,
+            "n_selected_features": int(len(top_idx)),
+            "imputer_medians": medians.tolist(),
+            "n_train": int(len(train_idx)),
+            "n_val": int(len(val_idx)),
+            "feature_order_hash": feature_hash,
+            "target_column": TARGET_COLUMN,
+        }
+        with open(fold_path, "w", encoding="utf-8") as handle:
+            json.dump(fold_metadata, handle, indent=2, allow_nan=False)
+        cv_manifest_entries[(int(seed), int(fold))] = {
+            "seed": int(seed), "fold": int(fold),
+            "model_path": "cv_models/" + artifact_name,
+            "metadata_path": "cv_folds/" + artifact_name,
+            "n_selected_features": int(len(top_idx)),
+            "selected_feature_names": selected_names,
+            "selected_feature_indices": top_idx.tolist(),
+        }
         preds = model.predict(X_val[:, top_idx])
 
         row = {
@@ -488,3 +531,112 @@ for filename in [
 print("\nTop 15 final production selected features:")
 for i, name in enumerate(selected_feature_names[:15], start=1):
     print(f"{i:2d}. {name}")
+
+# %% CELL 11 — Save CV manifest and verify exact saved CV artifacts
+cv_manifest = {
+    "seeds": SEEDS,
+    "n_splits": N_SPLITS,
+    "n_features": N_FEATURES,
+    "n_estimators_selector": 300,
+    "n_estimators_final": N_ESTIMATORS,
+    "feature_order_hash": feature_hash,
+    "dataset_path": os.path.abspath(DATA_PATH),
+    "target_column": TARGET_COLUMN,
+    "n_samples": int(X_raw.shape[0]),
+    "feature_names_path": "full_feature_names_ordered.json",
+    "index_reference": "Row indices refer to X_raw after the original CELL 4 filtering.",
+    "models": [cv_manifest_entries[key] for key in sorted(cv_manifest_entries)],
+}
+with open(os.path.join(OUTPUT_DIR, "cv_model_manifest.json"), "w", encoding="utf-8") as handle:
+    json.dump(cv_manifest, handle, indent=2, allow_nan=False)
+
+
+def verify_cv_artifacts():
+    """Reload saved CV artifacts and validate their exact feature/split contract."""
+    expected_names = {
+        f"seed_{seed}_fold_{fold}.json"
+        for seed in SEEDS for fold in range(1, N_SPLITS + 1)
+    }
+    for directory in (CV_MODEL_DIR, CV_FOLD_DIR):
+        actual = {name for name in os.listdir(directory) if name.endswith(".json")}
+        if actual != expected_names:
+            raise ValueError(
+                f"CV artifact files differ in {directory}: "
+                f"missing={sorted(expected_names - actual)}, unexpected={sorted(actual - expected_names)}"
+            )
+    with open(os.path.join(OUTPUT_DIR, "cv_model_manifest.json"), encoding="utf-8") as handle:
+        manifest = json.load(handle)
+    entries = manifest["models"]
+    if len(entries) != len(expected_names):
+        raise ValueError("Manifest must contain exactly 25 seed-fold entries.")
+    if {(entry["seed"], entry["fold"]) for entry in entries} != set(cv_manifest_entries):
+        raise ValueError("Manifest seed-fold entries are duplicated or missing.")
+    with open(os.path.join(OUTPUT_DIR, "full_feature_names_ordered.json"), encoding="utf-8") as handle:
+        saved_names = json.load(handle)
+    if saved_names != feature_names or feature_name_hash(saved_names) != feature_hash:
+        raise ValueError("Saved original feature ordering/hash differs from baseline.")
+    if manifest["feature_order_hash"] != feature_hash:
+        raise ValueError("Manifest feature-order hash differs from baseline.")
+    reloadable = 0
+    for entry in entries:
+        label = f"seed {entry['seed']}, fold {entry['fold']}"
+        with open(os.path.join(OUTPUT_DIR, entry["metadata_path"]), encoding="utf-8") as handle:
+            info = json.load(handle)
+        required = {"seed", "fold", "train_indices", "validation_indices",
+                    "selected_feature_indices", "selected_feature_names",
+                    "n_selected_features", "imputer_medians", "n_train", "n_val",
+                    "feature_order_hash", "target_column"}
+        if required - info.keys():
+            raise ValueError(f"{label}: missing metadata fields {sorted(required - info.keys())}.")
+        if (info["seed"], info["fold"]) != (entry["seed"], entry["fold"]):
+            raise ValueError(f"{label}: metadata seed/fold mismatch.")
+        selected = info["selected_feature_indices"]
+        if len(selected) != N_FEATURES or len(set(selected)) != N_FEATURES:
+            raise ValueError(f"{label}: expected 300 unique selected indices.")
+        if any(type(i) is not int or i < 0 or i >= len(saved_names) for i in selected):
+            raise ValueError(f"{label}: invalid selected feature index.")
+        if info["selected_feature_names"] != [saved_names[i] for i in selected]:
+            raise ValueError(f"{label}: selected feature names and indices disagree.")
+        for field in ("n_selected_features", "selected_feature_names", "selected_feature_indices"):
+            if entry[field] != info[field]:
+                raise ValueError(f"{label}: manifest and fold metadata disagree on {field}.")
+        if info["n_selected_features"] != N_FEATURES:
+            raise ValueError(f"{label}: selected feature count is not 300.")
+        if info["feature_order_hash"] != feature_hash or info["target_column"] != TARGET_COLUMN:
+            raise ValueError(f"{label}: feature hash or target column mismatch.")
+        medians_saved = np.asarray(info["imputer_medians"], dtype=np.float32)
+        if medians_saved.shape != (len(saved_names),) or not np.isfinite(medians_saved).all():
+            raise ValueError(f"{label}: missing, malformed or nonfinite imputation medians.")
+        train, val = info["train_indices"], info["validation_indices"]
+        if any(type(i) is not int or i < 0 or i >= len(X_raw) for i in train + val):
+            raise ValueError(f"{label}: invalid observation indices.")
+        if len(train) != info["n_train"] or len(val) != info["n_val"] or not train or not val:
+            raise ValueError(f"{label}: split sizes disagree or are empty.")
+        if len(set(train)) != len(train) or len(set(val)) != len(val) or set(train) & set(val):
+            raise ValueError(f"{label}: duplicate or overlapping train/validation indices.")
+        if set(train) | set(val) != set(range(len(X_raw))):
+            raise ValueError(f"{label}: train/validation indices do not cover the full dataset.")
+        restored = xgb.XGBRegressor()
+        try:
+            restored.load_model(os.path.join(OUTPUT_DIR, entry["model_path"]))
+        except Exception as error:
+            raise ValueError(f"{label}: saved model could not be loaded: {error}") from error
+        if restored.get_booster().num_features() != N_FEATURES:
+            raise ValueError(f"{label}: saved model does not have 300 input features.")
+        if restored.get_booster().num_boosted_rounds() != N_ESTIMATORS:
+            raise ValueError(f"{label}: saved model does not have 400 boosting rounds.")
+        reloadable += 1
+    print("\\n" + "=" * 60)
+    print("CV MODEL ARTIFACT VERIFICATION")
+    print("=" * 60)
+    print(f"{len(expected_names)}/25 CV models saved")
+    print(f"{len(expected_names)}/25 fold metadata files saved")
+    print(f"{reloadable}/25 models successfully reloadable")
+    print("All folds contain 300 selected features")
+    print("All folds contain imputation medians")
+    print("All train/validation splits verified")
+    print("Feature-order hashes verified")
+
+
+verify_cv_artifacts()
+
