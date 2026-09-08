@@ -50,6 +50,7 @@ from scipy.stats import spearmanr, pearsonr
 from sklearn.model_selection import KFold
 from sklearn.metrics import r2_score, mean_squared_error
 
+from google.colab import drive
 drive.mount("/content/drive")
 
 # %% CELL 2 — Config
