@@ -18,14 +18,19 @@
 #     - Section B (ViennaRNA folding) needs only a sequence string, so it
 #       is fully implemented and runnable right now (see the __main__ demo
 #       at the bottom).
-#     - Section A (flanking QCT window) implements the *looping* logic
-#       generically, but needs (1) the per-position QCT descriptor
-#       function -- referenced by the reviewer as "your QCT pipeline",
-#       which lives with Joshua/Jacky and is not in this repo as
-#       reusable code -- and (2) full target-locus sequences (protospacer
-#       + downstream flank), which ecoli_feature_matrix.csv does not
-#       contain. Both are accepted as parameters so this slots in once
-#       available; calling it without them raises a clear error rather
+#     - Section A splits into two parts. A1 (flank_composition_features:
+#       AT fraction, GC skew, melting temp) is fully computable from raw
+#       sequence alone and is now implemented and runnable, same as
+#       Section B — see genomic_coordinate_lookup.py for how to get real
+#       flank sequences to feed it. A2 (compute_flanking_qct_features,
+#       the per-position quantum descriptors) still needs (1) the QCT
+#       descriptor function itself -- referenced by the reviewer as "your
+#       QCT pipeline", which lives with Joshua/Jacky's offline DFT-based
+#       computation and is not reusable code in this repo -- and (2) full
+#       target-locus sequences, now obtainable via
+#       genomic_coordinate_lookup.py once you have a local MG1655
+#       GenBank file. A2 is accepted as a parameter so it slots in once
+#       available; calling it without one raises a clear error rather
 #       than silently doing nothing.
 #     - Section C (read-count filtering) needs a control-read-count
 #       column that does not exist in the current CSV. It raises a clear
@@ -67,6 +72,62 @@ import RNA  # ViennaRNA Python bindings
 # ============================================================
 # SECTION A — Extend the descriptor window past the 20-mer
 # ============================================================
+# A1. Composition features (AT fraction, GC skew, melting temp) — these are
+# genuinely computable right now, no DFT/QCT pipeline needed. The literature
+# review lists them separately from the quantum descriptors for exactly
+# this reason ("AT-richness of the wider flank carries real signal too").
+def flank_composition_features(flank_seq: str) -> dict:
+    """AT fraction, GC skew, and an approximate melting temperature for a
+    flanking-window sequence (upstream or downstream of the protospacer).
+    Unlike compute_flanking_qct_features below, this needs only the raw
+    sequence — no external QCT descriptor function required.
+
+    GC skew follows the standard (G-C)/(G+C) definition; returns 0.0 for
+    a window with no G or C rather than raising, since a skew of 0 is the
+    sensible convention when the denominator is zero (not a missing value).
+
+    Melting temperature uses the basic Wallace rule (4*(G+C) + 2*(A+T)),
+    which is a coarse approximation valid mainly for short windows (<~50
+    nt); for a large ±200 nt window as used in genomic_coordinate_lookup.py,
+    prefer a proper nearest-neighbor Tm (e.g. Biopython's
+    Bio.SeqUtils.MeltingTemp.Tm_NN) over this if precision matters more
+    than dependency-simplicity.
+    """
+    seq = flank_seq.upper()
+    n = len(seq)
+    if n == 0:
+        raise ValueError("flank_composition_features got an empty sequence.")
+    a, t, g, c = (seq.count(b) for b in "ATGC")
+    at_fraction = (a + t) / n
+    gc_skew = (g - c) / (g + c) if (g + c) > 0 else 0.0
+    tm_wallace = 4 * (g + c) + 2 * (a + t)
+    return {
+        "at_fraction": at_fraction,
+        "gc_skew": gc_skew,
+        "tm_wallace_c": float(tm_wallace),
+    }
+
+
+def add_flank_composition_features(df: pd.DataFrame, flank_seq_col: str) -> pd.DataFrame:
+    """Vectorized wrapper: adds the three flank_composition_features()
+    columns, prefixed eng.flank. to match ENGINEERED_PREFIXES."""
+    if flank_seq_col not in df.columns:
+        raise KeyError(
+            f"add_flank_composition_features needs a {flank_seq_col!r} column "
+            f"with real flanking sequences; not found (columns: "
+            f"{list(df.columns)[:10]}...). Get this from "
+            "genomic_coordinate_lookup.py's locus window extraction first."
+        )
+    feats = df[flank_seq_col].apply(flank_composition_features)
+    feats_df = pd.DataFrame(list(feats), index=df.index).add_prefix("eng.flank.")
+    return df.join(feats_df)
+
+
+# A2. Per-position quantum descriptors over the flanking window — this is
+# the part that genuinely needs the DFT-based QCT pipeline (Joshua/Jacky's
+# offline descriptor computation), not something re-derivable from the
+# sequence alone. Kept as a generic looping function with the descriptor
+# computation injected, per the original design below.
 def compute_flanking_qct_features(locus_sequences, protospacer_len, qct_descriptor_fn,
                                    downstream_nt=11):
     """Run a per-position QCT descriptor function over the ~11 nt
@@ -212,12 +273,18 @@ if __name__ == "__main__":
     example_scaffold = "GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGC"
     print(folding_features(example_spacer, example_scaffold))
 
+    print("\nDemo: Section A1 (flank composition) on a placeholder flank window.")
+    example_flank = "AATATTGCGCGATATTACGCGCGATTATATAGCGCGCGATATTAGCGCGATATAGCGCG"
+    print(flank_composition_features(example_flank))
+
     print(
-        "\nSections A and C are implemented but intentionally not demoed here: "
-        "they need real target-locus sequences + a QCT descriptor function "
-        "(Section A) and a real control-read-count column (Section C), neither "
-        "of which exist in ecoli_feature_matrix.csv yet. Calling them without "
-        "those inputs raises a clear error rather than a silent no-op -- see "
-        "each function's docstring for exactly what to pass in once the raw "
-        "screen data is pulled in from the literature-cited sources."
+        "\nSection A2 (per-position QCT descriptors) and Section C (read-count "
+        "filtering) are implemented but intentionally not demoed here: they "
+        "need a QCT descriptor function (A2) and a real control-read-count "
+        "column (C), neither of which exist in ecoli_feature_matrix.csv yet. "
+        "Calling them without those inputs raises a clear error rather than a "
+        "silent no-op -- see each function's docstring for exactly what to "
+        "pass in once the raw screen data is pulled in from the literature-"
+        "cited sources. For real flank sequences to feed A1 and A2 both, see "
+        "genomic_coordinate_lookup.py."
     )
