@@ -154,6 +154,33 @@ def median_impute_full(X):
     return X, medians
 
 
+def clip_train_val(X_train, X_val, iqr_multiplier=3.0):
+    """Winsorize extreme values using an IQR-based bound fit on the TRAIN
+    fold only. Guards against outlier/sentinel values that are finite (so
+    not caught by NaN/Inf sanitization above) but large enough to overflow
+    Ridge's Gram matrix computation (X.T @ X) during Cholesky solve.
+
+    Uses IQR rather than a fixed percentile cutoff: a sentinel/error value
+    (e.g. a "missing" flag like -999 baked into a raw quantum-descriptor
+    column) can appear in well over 0.5% of rows, in which case a fixed
+    0.5/99.5 percentile clip leaves it untouched since it's still inside
+    the kept range. Q1/Q3 come from the central 50% of each column, so
+    they stay uncontaminated unless outliers make up more than 25% of one
+    tail — far more robust to unknown contamination rates.
+
+    Negligible effect on tree models since bounds this wide barely move
+    their split points."""
+    q1 = np.percentile(X_train, 25, axis=0)
+    q3 = np.percentile(X_train, 75, axis=0)
+    iqr = q3 - q1
+    iqr_safe = np.where(iqr == 0, 1.0, iqr)  # avoid zero-width bounds on constant columns
+    lower = q1 - iqr_multiplier * iqr_safe
+    upper = q3 + iqr_multiplier * iqr_safe
+    X_train_clipped = np.clip(X_train, lower, upper)
+    X_val_clipped = np.clip(X_val, lower, upper)
+    return X_train_clipped, X_val_clipped
+
+
 def feature_name_hash(feature_names) -> str:
     payload = json.dumps(list(feature_names), separators=(",", ":"), ensure_ascii=False)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
@@ -179,6 +206,13 @@ def selector_params(seed: int) -> dict:
         tree_method="hist",
         importance_type="gain",
     )
+
+
+def _to_float64(X):
+    """Named (not lambda) so the Ridge pipeline stays picklable — CELL 9
+    joblib.dump()s champion_model, and joblib/pickle can't serialize a
+    lambda or other local/anonymous function."""
+    return X.astype(np.float64)
 
 
 # %% CELL 3b — Champion model factory (this is the swap point)
@@ -224,7 +258,7 @@ def build_champion(seed: int, n_estimators: int = N_ESTIMATORS):
     elif MODEL_NAME == "ridge":
         from sklearn.linear_model import Ridge
         from sklearn.pipeline import make_pipeline
-        from sklearn.preprocessing import StandardScaler
+        from sklearn.preprocessing import StandardScaler, FunctionTransformer
         # Linear baseline — useful to show whether the tree models are
         # actually adding value over a simple fit. n_estimators is unused.
         # Wrapped in StandardScaler: Ridge's regularization penalizes all
@@ -232,7 +266,21 @@ def build_champion(seed: int, n_estimators: int = N_ESTIMATORS):
         # 0, others large) would get penalized very unevenly and can also
         # cause numerical instability in the solver even after inf/NaN
         # cleanup. Trees don't need this since splits are scale-invariant.
-        return make_pipeline(StandardScaler(), Ridge(alpha=1.0, random_state=seed))
+        #
+        # Upcast to float64 first: our data stays float32 through
+        # imputation/clipping (see CELL 3). If a selected column has a
+        # tiny-but-nonzero variance, StandardScaler divides by that tiny
+        # number and can produce values large enough that X.T @ X
+        # overflows to inf in float32's ~3.4e38 range during Ridge's
+        # Cholesky solve, even though every individual input value is
+        # finite. float64's much larger dynamic range (~1.8e308) avoids
+        # this; trees don't need this cast since they never form a Gram
+        # matrix, so it's confined to this branch only.
+        return make_pipeline(
+            FunctionTransformer(_to_float64),
+            StandardScaler(),
+            Ridge(alpha=1.0, random_state=seed),
+        )
     else:
         raise ValueError(f"Unknown MODEL_NAME: {MODEL_NAME!r}")
 
@@ -307,6 +355,9 @@ def run_cv_for_seed(seed: int, n_features: int = N_FEATURES, n_estimators: int =
 
         # Fit imputer on training fold only.
         X_tr, X_val, _ = median_impute_train_val(X_tr_raw, X_val_raw)
+
+        # Winsorize outliers/sentinels using training fold only (see CELL 3 note).
+        X_tr, X_val = clip_train_val(X_tr, X_val)
 
         # Fit selector on training fold only (always XGBoost — see CELL 3b note).
         selector = xgb.XGBRegressor(**selector_params(seed))
@@ -414,6 +465,7 @@ print(selected_counts_df.head(30).to_string(index=False))
 # This is for deployment only. Do not report its in-sample fit as validation performance.
 print(f"\nTraining final production selector/model ({MODEL_NAME}) on all data using seed 42...")
 X_full, imputer_medians = median_impute_full(X_raw)
+X_full, _ = clip_train_val(X_full, X_full)  # winsorize against its own percentiles
 
 final_selector = xgb.XGBRegressor(**selector_params(FINAL_PRODUCTION_SEED))
 final_selector.fit(X_full, y)
