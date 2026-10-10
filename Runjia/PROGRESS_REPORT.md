@@ -137,8 +137,10 @@ because nobody needs a guide's exact efficiency — they have candidates and wan
 the best one. But **ratios of Δρ are not ratios of information.** On the ρ²
 scale, 0.53 → 0.61 is worth +0.09 while 0.82 → 0.90 is worth +0.18: the same Δρ
 is worth twice as much higher up. So when this report says the flank features
-extract 4.2× what a CNN gets from the same DNA, that compares two measurements
-taken **at the same baseline** and does not generalise to other baselines.
+extract more than a CNN does, that compares two measurements taken **at the same
+baseline** and does not generalise to other baselines. (That comparison has a
+second problem — the two models were not given the same sequence — which Part 5
+now states outright.)
 
 ### What ρ buys on the decision a practitioner actually makes
 
@@ -211,7 +213,8 @@ letters. 6,580 columns on the original screen, 6,517 on the curated one. *Why
 named features rather than raw sequence:* Part 5 shows the signal is a smooth
 compositional gradient, and a windowed mean computes a gradient exactly where a
 pattern detector has to approximate it — on the same DNA, hand-computed windows
-are worth 4.2× what a convolutional network extracts.
+are worth about four times what a convolutional network extracted — on a
+comparison where the network was given less sequence, which Part 5 now flags.
 
 **2. Imputation — column medians, from the training fold only.** Mundane but
 load-bearing: medians taken over all rows would leak the validation fold's
@@ -607,13 +610,30 @@ gave it raw DNA.
 
 On the **same rows and label**, ±100 letters of raw flanking sequence is worth
 **+0.019 ρ** to the network; the hand-computed windowed composition is worth
-**+0.080** — a factor of **4.2** from the same DNA. (Both at the same baseline;
-see Part 2 on why that ratio does not generalise to other baselines.)
+**+0.080**.
 
-So there is no motif to find. The signal is closer to "how GC-rich are the next
-500 letters" — a smooth average that a windowed mean computes exactly and a
-5-letter pattern detector must approximate badly. **Using the right instrument for
-the shape of the signal is the whole of SLICER's advantage.**
+> ⚠️ **That is not a matched comparison, and an earlier version of this report
+> described it as "a factor of 4.2 from the same DNA". It is not the same DNA.**
+> The network was given **±100 nt**; the hand-computed windows run out to
+> **±1,000 nt** (50 / 250 / 500 / 1,000 each side). Part of the hand features'
+> advantage is therefore simply *more sequence*, not a better instrument on the
+> same sequence. `seqnet.py`'s cached context stops at ±250 nt, so the matched
+> test — the same network given ±1,000 — **has not been run** and would need that
+> cache rebuilt first. Until it is, the honest claim is narrower: see below.
+
+What the unmatched result does support is the **length-scale** claim, which does
+not depend on the comparison. Splitting family A by distance: the ±10 nt of
+immediate context is worth **+0.049** and the 50–1,000 nt windows **+0.026**, so
+a third of the gain lives beyond anything a 378 nt input can see at all. The
+effect **peaks at 250–500 letters** and has faded by 1,000.
+
+So the signal is closer to "how GC-rich are the next 500 letters" than to a
+motif — a smooth average that a windowed mean computes exactly. Whether a CNN
+*given the same 1,000 nt* would also find it is an open question, and the
+expected answer is that it could in principle: nothing here shows a
+representational limit, only that hand-computed windows inject the right prior
+for free while a network would have to learn, from 33,567 noisy examples, that
+the correct summary of 500 positions is approximately their unweighted mean.
 
 The effect **peaks at 250–500 letters** and has faded by 1,000, so there is no
 point looking further out.

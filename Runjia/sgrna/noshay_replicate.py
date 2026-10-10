@@ -30,6 +30,20 @@ any statement of the result:
      importances; that is what `_irf_fit` does, with scikit-learn trees. Their
      Ranger build will differ in details.
 
+**One deviation that matters if you reuse this.** `_grow` draws `mtry` columns
+**once per tree** and then grows the whole tree inside that subspace, rather than
+resampling candidates at every split as a true random forest does. The
+reweighting mechanism needs the candidate set chosen externally, so this is the
+natural way to implement iRF — but it means **absolute `mtry` sets tree
+capacity**, and `sqrt(p)` is therefore not portable across matrices of different
+width. Measured on the same rows and fold
+(`results/irf_mtry_sweep.csv`): on the 427-column reduced basis, `mtry` =
+sqrt(427) = 20 scores rho **0.275**, while `mtry` = 78 — matching the
+full-matrix arm's sqrt(6232) — scores **0.489**, against **0.495** for the full
+6,232 columns. Same information, same algorithm, 0.21 of Spearman between them,
+entirely from how many columns each tree was allowed to see. Compare iRF across
+column counts at **matched absolute `mtry`**, never at matched sqrt(p).
+
     python -m sgrna.noshay_replicate --run
 """
 
