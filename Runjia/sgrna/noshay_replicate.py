@@ -37,11 +37,18 @@ reweighting mechanism needs the candidate set chosen externally, so this is the
 natural way to implement iRF — but it means **absolute `mtry` sets tree
 capacity**, and `sqrt(p)` is therefore not portable across matrices of different
 width. Measured on the same rows and fold
-(`results/irf_mtry_sweep.csv`): on the 427-column reduced basis, `mtry` =
-sqrt(427) = 20 scores rho **0.275**, while `mtry` = 78 — matching the
-full-matrix arm's sqrt(6232) — scores **0.489**, against **0.495** for the full
-6,232 columns. Same information, same algorithm, 0.21 of Spearman between them,
-entirely from how many columns each tree was allowed to see. Compare iRF across
+(`results/irf_mtry_sweep.csv`), sweeping `mtry` on the 427-column reduced basis:
+
+    mtry  20 (= sqrt(427), the default)   rho 0.275
+    mtry  78 (= sqrt(6232), matched)      rho 0.489
+    mtry 200                              rho 0.501
+    mtry 427 (every column, no subspace)  rho 0.497
+    -- full 6,232 columns at mtry 78      rho 0.495 / 0.486
+
+Same information, same algorithm, **0.21 of Spearman** between the first two
+rows, entirely from how many columns each tree was allowed to see. The curve is
+flat from 78 upward and peaks near half the columns, so the collapse at 20 is a
+starved-tree effect and nothing to do with the reduced basis. Compare iRF across
 column counts at **matched absolute `mtry`**, never at matched sqrt(p).
 
     python -m sgrna.noshay_replicate --run
