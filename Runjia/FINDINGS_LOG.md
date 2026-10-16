@@ -4284,3 +4284,61 @@ searched, and tuning it does not appear to move it.**
 Headline stays the margin against their **best known** configuration, +0.0161,
 with the residual ~20× search asymmetry stated. Reversing the decision would
 need a reason beyond wanting a larger number.
+
+## 16–17 October 2026 — the last batch, and a hygiene pass
+
+**Joint arms.** Summing the eleven single-family gains would claim +0.70 ρ; all
+eleven together are worth **+0.203**, only +0.039 beyond family A alone.
+`i_shape` adds +0.0009 on top of family A and **exactly nothing** once
+`d_supercoiling` is in (the two three-family arms agree to four decimals). The
+guide-only control is the most additive at 70% against 45–62% for the families
+reading shared DNA, which is what licenses reading the rest.
+
+**Family G's own rule fails.** Interactions add +0.0004 on top of their parents.
+Decomposed: essentiality alone **+0.0000** (so the survival-phenotype objection
+is dead), the expression block +0.0213, gene geometry and position +0.0393. The
+family is another measurement of position, not a transcription–strand mechanism.
+
+**Finding 7 reproduces and the quantum columns are rehabilitated.** Tetramers
+cost −0.0019 (−0.0028 on the published matrix), so the usable k-mer order stops
+at three on both cohorts. The step that looked unexplained is the **316
+quantum-chemical columns: +0.0114 over a complete k-mer encoding**, no selection
+anywhere. They add no information — each is a property lookup for a base, pair or
+triple — and they pay anyway, which puts Noshay's tables in the same band as
+every other re-description.
+
+**The 63 hand-named columns, split.** The 46 computable from the 20-mer carry the
+whole gain (+0.0065); the 17 that are not carry **none** (−0.0007). The
+427-column result is re-description, not outside information — a fifth
+independent measurement of the same effect. The two genuinely
+annotation-dependent columns are inside the 17 and contribute nothing, so
+annotation helps only at the locus scale.
+
+**No reduced representation is non-inferior on the curated cohort**: 364 lose
+0.0118, 1,510 lose 0.0096, and with family A 712 lose 0.0142 and 1,858 lose
+0.0068 — all past the 0.005 margin. "412 ≈ all 6,232" is published-matrix-only.
+
+**Window robustness.** Family A rebuilt at 75/300/600/1,200 gives +0.1634 against
++0.1638 — a difference of **0.0005** against ±0.005 declared in advance. The
+sweep's winner's curse is not where the gain lives.
+
+**The sealed holdout gives a bound, not a number.** Across three sealing draws
+the adaptive component is **+0.0005 ± 0.016**; the *reference* arm's own gap
+swings +0.001 to −0.024, larger than the quantity measured. No inflation is
+detectable and the automatable component is not larger than ~0.02. Two design
+faults found along the way and both fixed: the first version let the sealed fit
+train on 25% more rows than a CV fold, and one draw of 872 genes is too coarse to
+resolve ±0.005.
+
+**Model classes and cost.** Ridge is within 0.058 of a tuned CNN–BiGRU at 1/220th
+of the compute; boosting beats it by +0.003 at 1/113th. ridge ≈ PLS ≈ forests
+within 0.009 says the task is bias-limited, not variance-limited; boosting's
++0.055 over ridge doubles when family A is present, so family A is also where the
+interaction structure is; k-NN worst at 0.601 says the signal is smooth and
+global rather than clustered.
+
+**Hygiene pass.** Parts 1–4 now read as claim + evidence. Correction narration —
+"*Correction, 13 October*", "withdrawn above", "this project reported for weeks",
+"the report said otherwise until this audit" — is gone from the findings and
+lives in Part 5's withdrawal table and this log. Nine claims withdrawn in seven
+days, the newest being the 427-column reading.

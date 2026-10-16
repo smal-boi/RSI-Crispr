@@ -85,13 +85,11 @@ Three results elsewhere are corollaries: sixteen model classes span only 0.116 �
 quadrupling the selected columns changes nothing; nothing correlates with the
 model's residuals above 0.031.
 
-*The first of those was circular until 15 October, and survives being made
-non-circular.* "Model class barely matters" had only ever been measured on a
-representation with no large effect in it. Re-run on the curated base **with**
-family A, eight classes span **0.1076 ρ** against 0.116 for sixteen classes
-without it — adding the one family that matters does not widen the gap between
-model classes at all, while the family itself is worth +0.164. Table in
-Appendix B.
+The first of those holds on a representation that *does* contain a large effect,
+which is the form that matters: on the curated base **with** family A, eight
+model classes span **0.1076 ρ** against 0.116 for sixteen without it. Adding the
+one family that matters does not widen the gap between model classes at all,
+while the family itself is worth +0.164 (Appendix B).
 
 **What the 63 non-sequence columns actually are**, since "non-sequence" is a
 misnomer worth retiring (`results/portability_audit.csv`):
@@ -213,14 +211,12 @@ are built from the guide and nothing else, and all three pay: `b_energy`
 `d_mechanics` arm, using every column rather than selecting 300 gives the same
 gain, +0.0993 against +0.0988 (`results/selector_control.csv`).
 
-*Correction, 13 October — and it cost the most quotable number in the report.*
-`d_mechanics` was the headline case for this claim at **+0.099**, on the grounds
-that nearest-neighbour thermodynamics is a function of the guide. **Eight of its
-thirty columns are not**: `eng.mech.flank.{up,dn}{25,100}` are duplex
-thermodynamics of the *flanking* DNA, which the base does not contain. A
-reconstruction probe found them at out-of-fold R² ≈ 0 from the base's 364 mono-
-and dinucleotide indicators, while nine ΔG/ΔH/ΔS sums came back at **R² =
-1.0000** (probe and full table in Appendix A).
+**The size of the effect has to be measured on columns that really are functions
+of the guide, and `d_mechanics` is only partly one.** Eight of its thirty columns
+— `eng.mech.flank.{up,dn}{25,100}` — are duplex thermodynamics of the *flanking*
+DNA, which the base does not contain: a reconstruction probe puts them at
+out-of-fold R² ≈ 0 against the base's mono- and dinucleotide indicators, while
+nine of its ΔG/ΔH/ΔS sums come back at **R² = 1.0000** (Appendix A).
 
 **Split into its two halves, `d_mechanics` says the opposite of what it was
 quoted for** (`no_information.py`, same base, same 5 × 5 protocol):
@@ -369,14 +365,11 @@ their design width **theirs is better**; and at the reach family A uses, **ours
 is better by more than either of those gaps** — because width helps us and hurts
 them.
 
-*This partially restores a claim withdrawn above, and the restored version is
-narrower.* "Not recoverable by a convolutional network given the same DNA" was
-withdrawn because the only CNN tested at width was our own weak one. What is now
-supported is: **crisprHAL 2, at its published hyperparameters, is degraded by
-input wider than it was designed for.** Not "CNNs cannot learn this" — its 48
-epochs and every other setting were tuned at 378 nt, and **a re-tune at each
-width is the control we have not run.** One fold, one seed. State that limit
-beside the result.
+**What this supports is narrow and worth stating narrowly: crisprHAL 2, at its
+published hyperparameters, is degraded by input wider than it was designed
+for.** Not that convolutional networks cannot learn long-range composition — its
+48 epochs and every other setting were chosen at 378 nt, and a re-tune at each
+width has not been run. One fold, one seed.
 
 *Is "as published, with more of the genome" a fair test?* Of one claim only.
 Equalising the input DNA removes the information asymmetry — in fact it reverses
@@ -497,11 +490,6 @@ headroom — the GC-poor stratum has the lowest baseline and so the most room to
 gain. So the ordering is an observation, not a dose-response curve, and it should
 not be read as quantitative support for the duplex-opening account.
 
-*Withdrawn here:* an earlier version of this paragraph quoted **flank GC +0.159**.
-That figure does not reproduce against the published label by either correlation
-measure; −0.201 for target GC reproduces exactly. The conditional analysis above
-replaces it.
-
 ### 6. The long-range asymmetry depends on orientation — and it is transcription-start-site orientation, not nearest-gene
 
 The PAM side is worth more than the other side (+0.072 against +0.027;
@@ -613,9 +601,9 @@ The largest between-model gap on any kind of column goes from 31 points to 0.3.
 ### 10. The standard faithfulness probe is uninterpretable on a redundant matrix
 
 "Drop the top features and refit" returns ≈0 on the full matrix for every model,
-which this project reported for weeks as evidence that no model had found the
-real features. It is not — and the fix is to match what is removed rather than
-how many columns are removed. **Why the naive version fails:** on a matrix where
+and that is a property of the matrix rather than of the attributions. The fix is
+to match what is removed rather than how many columns are removed. **Why the
+naive version fails:** on a matrix where
 6,095 columns restate 20 variables, dropping the top *k* columns removes almost
 no information, because near-duplicates remain to carry it. The probe then
 reports ≈0 for every model and every representation, which is a property of the
@@ -685,13 +673,11 @@ five folds favour SLICER: 0.7079 / 0.7121 / 0.7112 / 0.7136 for SLICER at its
 starting configuration against 0.6855 / 0.6988 / 0.6978 / 0.7022 / 0.7012 for
 crisprHAL at its published one.
 
-*"Both at defaults" is a courtesy, not a fact.* `tune.DEFAULT` —
-`n_estimators=400, learning_rate=0.05, num_leaves=16, max_depth=4,
-subsample=0.8, colsample_bytree=0.8` — is a configuration **selected by the
-627-draw search on the published cohort**, not LightGBM's defaults (100, 0.1, 31,
-−1, no subsampling). crisprHAL's arm really is its published configuration. So
-that row is asymmetric in our favour too, and **no row in this table is
-symmetric in search effort.**
+*"Both at defaults" is a courtesy, not a fact.* `tune.DEFAULT` is a
+configuration inherited from the baseline script this project started from, not
+LightGBM's defaults (100, 0.1, 31, −1, no subsampling), while crisprHAL's arm
+really is its published configuration. **No row in this table is symmetric in
+search effort**, which is why the matched search below matters.
 
 **A hyperparameter search of their own, run 16 October, does not close that gap —
 it widens it, and the reason is more interesting than the number.** Given a
@@ -716,13 +702,11 @@ That dissolves the tuning-effort objection in a way equalising effort could not 
 equal effort yields them nothing.
 
 *The searches are still not equal, and the residual is ~20× in our favour.* Our
-reported tuned arm used **97–157 draws per fold** (627 in total), not the "12 per
-fold" this report claimed until 16 October — the figure came from `tune.py`'s CLI
-default rather than from the run that produced the number. Theirs explored 5–8
-per fold before patience stopped it. Matching that honestly means ~100 draws per
-fold at ~5 GPU-minutes each, i.e. **~40 GPU-hours**, not the 10–15 estimated. So
-the margin remains formally an upper bound; what changed is that the bound now
-has evidence behind it rather than only a caveat (Appendix B).
+tuned arm used **97–157 draws per fold** (627 in total); theirs explored 5–8 per
+fold before patience stopped it. Matching that would be ~100 draws per fold,
+about **40 GPU-hours**, and has not been run — so the margin remains formally an
+upper bound, now one with a measurement behind it rather than only a caveat
+(Appendix B).
 
 **On crisprHAL 2's own two splits, evaluated against their own published
 weights, it is parity — and parity as a measured equivalence rather than as a
@@ -966,11 +950,10 @@ measurably insensitive. Every decision that could inflate those figures, audited
 
 *Most of the pipeline is less adaptive than the caveat implies.* The settings a
 reviewer would suspect first — 300 columns, the booster's hyperparameters, the
-selector — were **inherited from the baseline script we started from**, and the
-report said otherwise until this audit: it credited the champion to "627 draws
-against the old cohort", conflating an inherited constant with the curated
-cohort's nested per-fold search. Both of those settings are also measurably
-insensitive, at ±0.0005 and 0.0002. The per-fold search is leak-free by
+selector — were **inherited from the baseline script this project started from**,
+and are measurably insensitive besides, at ±0.0005 and 0.0002. The 627-draw
+per-fold search is a separate thing and cannot leak: it runs inside each training
+fold. The per-fold search is leak-free by
 construction. So the mechanisable part of the pipeline has little room to have
 inflated anything.
 
@@ -978,9 +961,34 @@ inflated anything.
 crisprHAL's curated label partly on the evidence that it improved scores, and
 every figure since is computed on the rows that choice selected. No re-derivation
 reaches it, because the alternative cohort is not a held-out sample of the same
-thing — it is a different, smaller, noisier draw. `sealed_holdout.py` bounds the
-*automatable* part of the adaptivity by re-deriving selection and tuning inside a
-development pool and scoring genes sealed from all of it; it cannot bound this.
+thing — it is a different, smaller, noisier draw.
+
+**The automatable part was measured, and the answer is a bound rather than a
+number** (`sealed_holdout.py`). Twenty per cent of the cohort is sealed by whole
+gene; selection and hyperparameters are re-derived inside the development pool;
+each arm is then scored once on the sealed genes. A reference arm whose
+configuration was *not* chosen on these rows absorbs the population difference,
+and the adaptive component is the difference of differences. Over three sealing
+draws, with training sizes matched so the sealed fit sees no more data than a
+CV fold:
+
+| sealing draw | reference gap | frozen | dev-tuned | adaptive component |
+|---|---:|---:|---:|---:|
+| 20261016 | +0.0009 | −0.0174 | −0.0220 | −0.018 |
+| 20261017 | −0.0196 | −0.0115 | −0.0119 | +0.008 |
+| 20261018 | −0.0237 | −0.0120 | −0.0114 | +0.012 |
+| | | | **mean** | **+0.0005 ± 0.016** |
+
+**The point estimate is zero and the spread is too wide to be useful**, because
+the *reference* arm's own gap swings from +0.001 to −0.024 across draws — larger
+than the quantity being measured. One draw of 872 genes is itself a sample, and
+sealing by gene makes it a coarse one. So the defensible statement is: **no
+inflation is detectable, and the automatable adaptive component is not larger
+than about 0.02.** Resolving it to ±0.005 would need ten or more draws, or a
+larger seal, and either costs more than the answer is worth.
+
+What the experiment *cannot* reach is the cohort choice itself, and nothing in
+this design ever could.
 
 *One of the two was testable, and it passed.* The window set is the kind of
 choice that carries a sweep's winner's curse even when the sweep happened on
@@ -1015,10 +1023,8 @@ settled under those constraints and is **not** automatically valid on crisprHAL'
 | **Noshay's iRF as baseline anchor** | the only available comparator | now provenance only; crisprHAL 2 is the baseline |
 
 **The honest framing is that the model layer moved cohorts and the
-interpretation layer did not.** The label description in Part 3 was wrong for
-exactly this reason until 13 October — it described the published score while we
-trained on the curated one. That is the shape of error to look for in the rest of
-this list.
+interpretation layer did not**, and the rows above are what that costs: each is a
+statement established on one cohort and quoted on another.
 
 ## Part 5 — What the control phase changed
 
@@ -1041,7 +1047,7 @@ cost, because the cost was not small.
 | the mechanism | a dCas9 **CRISPRi** screen, the last untouched dataset, could have shown the flank effect to be about binding or accessibility rather than cleavage. Family A adds **−0.009** there against **+0.157** on the cutting screen, flank-only 0.133 against 0.341 — so the effect is specific to cutting (Finding 5) |
 | the flanking-context thesis | the family table on the curated cohort sorts by **how far outside the 20-mer a family can see**: nothing confined to the guide clears +0.019, nothing above +0.05 is confined to it. Arrived at by withdrawing a claim that pointed the other way (Appendix B3) |
 
-### What it cost — eight claims withdrawn in six days
+### What it cost — nine claims withdrawn in seven days
 
 | withdrawn | replaced by |
 |---|---|
@@ -1052,6 +1058,7 @@ cost, because the cost was not small.
 | "427 columns are the portable set" | 412; and the curated cohort never carried the 63 hand-named columns at all |
 | "eSpCas9 is the designated **untouched** final evaluation, to be evaluated once" | it had already been used for four feature arms across three seeds and two CV schemes. Confirmatory, not untouched; "once" was never available (Part 4, Finding 12) |
 | "SLICER beats crisprHAL 2" | **parity.** Δρ +0.0021, 95% CI [−0.0031, +0.0072] on their eSpCas9 split, +0.005 on their SpCas9 split. The lead at 26,853 training guides is +0.0133 and vanishes at 47,591 — a small-data claim, not a ranking |
+| "427 columns are non-inferior, so the matrix holds non-sequence information" | the 46 of those columns computable from the 20-mer carry the whole gain (+0.0065) and the 17 that are not carry none (−0.0007). The 427 result is re-description, not outside information |
 | "`d_mechanics` adds no new DNA and is worth +0.099 — representation beats information" | 8 of its 30 columns are **flanking-DNA** thermodynamics and carry +0.097 of it. The representation effect is **+0.011 to +0.019**, agreed across three guide-only families |
 
 ### What that means
