@@ -4342,3 +4342,98 @@ global rather than clustered.
 "the report said otherwise until this audit" — is gone from the findings and
 lives in Part 5's withdrawal table and this log. Nine claims withdrawn in seven
 days, the newest being the 427-column reading.
+
+---
+
+## 16 October 2026 — the human baseline reproduces, and the champion does not travel
+
+**Item 4 closed.** The teammate's settings arrived
+(`Jacky/human-boundary/HUMAN_BASELINE_SETTINGS.md`): 400 selected columns, 1,000
+estimators, every other XGBoost knob at library defaults. Run through this
+harness on the same folds (`src/sgrna/human_baseline.py`, 3 seeds × 5 folds,
+17,421 guides × 6,233 columns):
+
+| arm | columns | settings | ρ |
+|---|---:|---|---:|
+| harness_default | 300 | champion | 0.4036 ± 0.0128 |
+| jacky_cols_only | 400 | champion | 0.4074 ± 0.0148 |
+| jacky_400_1000 | 400 | library defaults, 1,000 trees | **0.5076 ± 0.0149** |
+
+ρ 0.472 reproduces and is exceeded. The third arm was added because the quoted
+configuration changes two things at once: the decomposition says the column
+count is worth **+0.0038** (noise) and the hyperparameters **+0.1002**.
+
+So the figure was never about human needing more features. It is about our
+champion — `max_depth=4, learning_rate=0.05, subsample=0.8`, tuned on one
+*E. coli* screen — being mis-specified by 0.10 ρ on a matrix of a different
+shape, against XGBoost's own `max_depth=6, learning_rate=0.3` defaults.
+
+**What it changes.** Part 3's cross-kingdom conclusion survives — nothing
+transfers either way — but one sentence supporting it does not, and that took a
+re-measurement to find rather than an inference (below). What it adds is a caution — every
+external arm in the report is fitted with the champion and therefore reports a
+lower bound on a locally-tuned model. Checked the one place that could matter:
+Finding 5's Cui null is not an underfit artefact, because the same 348 flank
+columns reach ρ 0.1333 on Cui alone under gene-grouped CV, so the model reads
+them and still gains nothing beside the base.
+
+Follow-up launched: which of the three knobs (trees, depth/learning rate,
+subsampling) carries the +0.1002 — capacity would be a statement about the human
+dataset, shape a statement about our settings.
+
+**Which knob, and the answer underneath it.** The quoted configuration changes
+three things at once, so each was moved alone from the 400-column reference
+(`results/human_baseline_knobs.csv`):
+
+| change from the champion | ρ | Δ |
+|---|---:|---:|
+| `max_depth` 4 → 6 | 0.4659 | **+0.0585** |
+| `learning_rate` 0.05 → 0.3 | 0.4490 | +0.0416 |
+| `n_estimators` 400 → 1,000 | 0.4435 | +0.0361 |
+| no subsampling | 0.3999 | −0.0075 |
+| all three | 0.5076 | +0.1002 |
+
+Sub-additive, as three capacity knobs should be. The largest single term is
+**tree depth**, which is the interaction-order knob — so the natural reading is
+that the human signal has interaction structure *E. coli*'s lacks. Depth also
+buys plain capacity, so the hyperparameter cannot establish it; the direct test
+can, and it agrees (`results/human_additivity.csv`): ridge on the same 400
+selected columns reaches **63.7%** of boosting's ρ in human (0.3232 against
+0.5076) against **95.6%** in *E. coli*.
+
+So the champion is not arbitrarily mis-tuned. It is tuned for a nearly-linear
+signal — shallow trees, heavy shrinkage — and the human signal is not nearly
+linear. That **bounds** the "does the champion travel" worry: it travels across
+the bacterial sets because the shape of the signal is the same there, and fails
+across kingdoms because the shape changes. Caveat: the two ratios are not on an
+identical basis (*E. coli*'s on 427 decorrelated columns, human's on 400
+selected), so this is an order-of-magnitude comparison, not a precise ratio.
+
+**And the consequence, which is a withdrawal.** Part 3's boundary claim had both
+cross-kingdom directions negative with intervals excluding zero — measured with
+the human model at champion settings. The script that produced those numbers was
+never in `src/`, so it was rebuilt (`src/sgrna/kingdom_transfer.py`, 6,216
+columns shared by name between the two matrices) and run at both settings, with
+the interval from 2,000 test-row resamples rather than from three seeds:
+
+| direction | champion | human-fitted | human-fitted, seeds pooled | 95% CI |
+|---|---:|---:|---:|---|
+| *E. coli* → human | −0.0462 | −0.0367 | −0.0393 | [−0.0542, −0.0242] |
+| human → *E. coli* | −0.0155 | −0.0055 | **−0.0060** | **[−0.0227, +0.0111]** |
+
+The first two columns are means of three single-seed fits; the third averages the
+three seeds' predictions before scoring, which is what the interval is
+bootstrapped on. The two conventions agree to 0.003 and are kept separate rather
+than mixed.
+
+The champion column reproduces the quoted −0.048 and −0.017. The human-fitted
+column moves the reverse direction to **zero** — and it is the direction trained
+on human, the only one whose hyperparameters were wrong for its training data.
+So "negative in both directions, intervals excluding zero" is withdrawn and
+replaced by "no transfer in either direction, measurably negative in one". The
+boundary survives; the symmetry does not.
+
+Worth noting how this one was caught: not by re-reading the claim, but by
+chasing down a teammate's unexplained number. Reproducing ρ 0.472 showed the
+human model was the wrong shape for its data, and the transfer interval turned
+out to be resting on exactly that.

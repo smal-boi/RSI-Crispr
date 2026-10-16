@@ -52,10 +52,15 @@ gradient holds in both organisms even though *C. rodentium*'s own 236 kb screen
 is too narrow for a correlation to reveal it (`RESULTS.md` §15).
 
 **And where it stops.** Carried to Noshay et al.'s human matrix — 6,216 shared
-columns, so no change of representation — transfer is **−0.048** one way and
-**−0.017** the other: useless in both directions. The strand-invasion mechanism
-behind it inverts (GC vs cut score: −0.20 in *E. coli*, +0.02 in human). Every
-claim here is a bacterial one, and the boundary is measured rather than assumed.
+columns, so no change of representation — transfer is **−0.039
+[−0.054, −0.024]** going to human and **−0.006 [−0.023, +0.011]**, which is zero,
+coming back: useless in both directions, with the human model fitted to the
+human matrix rather than to *E. coli*'s hyperparameters. That distinction is
+worth the extra run — the human signal is far less additive than *E. coli*'s
+(ridge reaches 64% of boosting's ρ against 96%), so our champion is the wrong
+shape for it by 0.10 ρ. The strand-invasion mechanism behind the effect also
+inverts (GC vs cut score: −0.20 in *E. coli*, +0.02 in human). Every claim here
+is a bacterial one, and the boundary is measured rather than assumed.
 
 The contribution is not the prediction, though. It is decoding the published
 matrix so it can be computed for any guide, showing which feature families

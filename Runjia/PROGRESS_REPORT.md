@@ -397,7 +397,7 @@ each width, which is a weaker objection than it was before this was read.
 |---|---|
 | different enzyme (WT-SpCas9 → TevSpCas9) | ρ 0.700 against 0.825 for a locally-trained model |
 | different organism (*E. coli* → *C. rodentium*) | 0.701 [0.683, 0.704]; reverse 0.627 [0.617, 0.636] |
-| different kingdom (bacteria ↔ human) | **negative both ways**, CIs excluding zero |
+| different kingdom (bacteria ↔ human) | **no transfer either way** — ρ −0.039 [−0.054, −0.024] into human, −0.006 [−0.023, +0.011] back, with the human model fitted to the human matrix |
 | read-depth / mappability artefact? | survives a high-uniqueness stratum, +0.078 → +0.051 |
 | gene ranking in disguise? | within-gene ρ 0.571 against 0.606 global; flanks worth **+0.061 inside genes** |
 | **a property of cutting, or of Cas9 binding?** | **cutting.** In a dCas9 CRISPRi screen family A adds **−0.009**, against **+0.157** on the cutting screen under the same gene-grouped protocol |
@@ -406,8 +406,8 @@ each width, which is a weaker objection than it was before this was read.
 an artefact of this dataset rather than a property of the DNA. A new **enzyme**
 changes the protein but keeps the genome, so a surviving effect is not about
 SpCas9's idiosyncrasies. A new **organism** changes the genome too, so a
-surviving effect is not about *E. coli*'s composition; the **human** arm going
-negative is the control on that control, since a model transferring everywhere
+surviving effect is not about *E. coli*'s composition; the **human** arm
+failing is the control on that control, since a model transferring everywhere
 would be evidence of a methodological artefact rather than of biology. The
 **uniqueness stratum** removes the mappability explanation by restricting to
 guides whose reads cannot be misassigned. The **within-gene** comparison removes
@@ -824,13 +824,31 @@ compressed into a biology paper.
 
 ## Part 3 — Where this stops
 
-- **Everything is bacterial.** Cross-kingdom transfer is ≈0, measured in both
-  directions. And our human baseline is **undertuned** — a grid search by a
-  teammate reached ρ 0.472 against the 0.404 quoted here — which matters because
-  the cross-kingdom claim leans on the human side being weak. **Closing this is
-  delegated** (Part 4 item 4): until the settings arrive, the claim rests on the
-  *sign* of the transfer, which is negative in both directions with intervals
-  excluding zero, and not on the size of the margin.
+- **Everything is bacterial.** Cross-kingdom transfer is useless in both
+  directions, and the two directions are not the same kind of useless. With the
+  human model fitted to the human matrix rather than to *E. coli*'s
+  hyperparameters, *E. coli* → human is **ρ −0.039 [−0.054, −0.024]**, clear of
+  zero, while human → *E. coli* is **−0.006 [−0.023, +0.011]**, which is zero
+  (`results/kingdom_transfer_boot.csv`, 2,000 test-row resamples). Both
+  directions excluded zero only while the human model was undertuned; fitting it
+  properly moved one of them to zero. The boundary is real either way — nothing
+  transfers — but it is a wall, not a reversal.
+- **Our human baseline was undertuned, and by more than was thought.** At the
+  teammate's settings the human matrix reaches **ρ 0.5076 ± 0.0149** against the
+  0.404 this harness had been quoting — so the ρ 0.472 attributed to an early
+  personal script not only reproduces, it is exceeded. **The gap is
+  hyperparameters, not features**: 400 selected columns at our champion settings
+  score 0.4074, within noise of 300 (Appendix B). This widens the cross-kingdom
+  gap rather than narrowing it, but it carries a caution that reaches further
+  than the human arm — **the champion hyperparameters are inherited from the
+  *E. coli* baseline and lose 0.10 ρ on a matrix of a different shape.** Every
+  external arm in this report is fitted with them. The reason is identified, and
+  it is the more interesting half: **the human signal is much less additive.**
+  Ridge reaches 95.6% of boosting's ρ in *E. coli* and only **63.7%** in human,
+  and the largest single hyperparameter term is tree depth (+0.0585 of the
+  +0.1002). A champion tuned where the signal is nearly linear is the wrong model
+  where it is not — which also explains why it travels across the bacterial sets
+  without incident (Appendix B).
 - **One organism and two relatives.** No genome-wide Cas9-cutting screen exists
   outside *Enterobacteriaceae*; what exists elsewhere is CRISPRi, a different
   measured quantity. Closing this needs wet-lab work.
@@ -881,18 +899,18 @@ Remaining before submission:
 | 1 | ~~eSpCas9 final evaluation~~ | **done, and it is a tie** — ρ 0.7842 against 0.7821 on crisprHAL's own eSpCas9 split with their published weights, at 47,591 training guides. Also corrected: eSpCas9 was never an untouched holdout (above) |
 | 2 | ~~crisprHAL 2 given a search of its own~~ | **run 16 October, and it found nothing**: 0.6987 against their published 0.6971, with their published configuration winning the inner search in 4 of 5 folds. The margin against their *best known* configuration is **+0.0161**. Still not a fully matched search — ours used 97–157 draws per fold, theirs 5–8, so ~40 GPU-h would be needed to equalise (Appendix B) |
 | 3 | ~~orientation controls~~ | **done** — Jacky, Finding 6 |
-| 4 | human baseline re-tuned at the teammate's settings — **delegated to the teammate**, request drafted (`docs/correspondence/request_human_baseline_settings.md`): the grid-search settings behind ρ 0.472 are not recorded in the repo or the log, and the script that produced `human_transfer.csv` is not in `src/`. If it does not arrive, Part 3's cross-kingdom sentence rests on the *sign* of the transfer and says so | ~1 h once supplied |
+| 4 | ~~human baseline re-tuned at the teammate's settings~~ | **done, and it reproduces: ρ 0.5076 against the 0.472 quoted.** The settings arrived 16 October; the gain is hyperparameters, not columns (+0.1002 against +0.0038), and the reason is that the human signal is far less additive than *E. coli*'s (ridge/boosting 63.7% against 95.6%), so the champion is the wrong shape for it by 0.10 ρ. **This cost a claim**: refitting the human side moved one cross-kingdom transfer direction from −0.016 to −0.006 [−0.023, +0.011], i.e. to zero, so "negative in both directions with intervals excluding zero" is withdrawn in favour of "no transfer in either direction" (Part 5, Appendix B) |
 | 5 | ~~conditional test of the GC hypothesis within matched GC strata~~ | **done** — Finding 5 |
 | 6 | ~~sample-complexity curve repeated across folds and seeds~~ | **done** — Appendix B |
 | 7 | re-tune crisprHAL 2 at **each input width** — **partly supplied by their own paper.** Browne et al. searched input length *per dataset* and stopped at 378 nt (*E. coli* SpCas9) and 406 nt (eSpCas9), reporting that gains level off: +0.00034 ρ per upstream nucleotide and +0.00074 per downstream one, from 0.554 on the sgRNA alone to 0.697 at 378 nt. So the width is their optimum, found by their own search, and our 1,023/2,023 nt degradation is the continuation of a curve they had already flattened. What is still unrun is re-tuning the *other* hyperparameters at each width | 2–4 GPU-h, now optional |
 | 8 | ~~re-derive the ceiling for the curated label~~ | **done: 0.946 [0.944, 0.948]**, from their own published per-replicate counts, cohort and label both verified to reproduce, and conservative by construction (Finding 11) |
 | 9 | ~~re-run the gene-grouped ablation on the curated cohort~~ | **done** — all eleven families, Appendix B3. The three largest effects lose nothing beyond the 6% grouping tax; `e_nucleoid` and `g_transcription` carry a real locus component of 6 and 15 points |
 
-**Paper writing is no longer blocked by this list.** Items 1, 2, 7 and 9 are
-closed; item 8 needs the original per-replicate read counts and item 4 needs a
-teammate, and **neither gates a draft** — the ceiling can be quoted as inherited
-with its caveat, and the human baseline enters only one sentence of Part 3. What
-the draft must carry, and what this list exists to make unavoidable:
+**Paper writing is no longer blocked by this list — the list is closed.** Every
+item is done except the optional remainder of item 7, re-tuning crisprHAL 2's
+*other* hyperparameters at each input width, which their own published length
+search makes unlikely to change the answer. What the draft must carry, and what
+this list exists to make unavoidable:
 
 **The last untouched dataset has now been spent, deliberately, on the one
 question that could have falsified the mechanism.** Cui et al.'s dCas9 CRISPRi
@@ -1047,7 +1065,7 @@ cost, because the cost was not small.
 | the mechanism | a dCas9 **CRISPRi** screen, the last untouched dataset, could have shown the flank effect to be about binding or accessibility rather than cleavage. Family A adds **−0.009** there against **+0.157** on the cutting screen, flank-only 0.133 against 0.341 — so the effect is specific to cutting (Finding 5) |
 | the flanking-context thesis | the family table on the curated cohort sorts by **how far outside the 20-mer a family can see**: nothing confined to the guide clears +0.019, nothing above +0.05 is confined to it. Arrived at by withdrawing a claim that pointed the other way (Appendix B3) |
 
-### What it cost — nine claims withdrawn in seven days
+### What it cost — ten claims withdrawn in eight days
 
 | withdrawn | replaced by |
 |---|---|
@@ -1059,6 +1077,7 @@ cost, because the cost was not small.
 | "eSpCas9 is the designated **untouched** final evaluation, to be evaluated once" | it had already been used for four feature arms across three seeds and two CV schemes. Confirmatory, not untouched; "once" was never available (Part 4, Finding 12) |
 | "SLICER beats crisprHAL 2" | **parity.** Δρ +0.0021, 95% CI [−0.0031, +0.0072] on their eSpCas9 split, +0.005 on their SpCas9 split. The lead at 26,853 training guides is +0.0133 and vanishes at 47,591 — a small-data claim, not a ranking |
 | "427 columns are non-inferior, so the matrix holds non-sequence information" | the 46 of those columns computable from the 20-mer carry the whole gain (+0.0065) and the 17 that are not carry none (−0.0007). The 427 result is re-description, not outside information |
+| "cross-kingdom transfer is negative in both directions, with intervals excluding zero" | one direction only. The reverse direction held its interval off zero because the human model was fitted with *E. coli*'s hyperparameters; fitted to the human matrix it is **−0.006 [−0.023, +0.011]**. Transfer is still useless both ways, but only *E. coli* → human is measurably negative |
 | "`d_mechanics` adds no new DNA and is worth +0.099 — representation beats information" | 8 of its 30 columns are **flanking-DNA** thermodynamics and carry +0.097 of it. The representation effect is **+0.011 to +0.019**, agreed across three guide-only families |
 
 ### What that means
@@ -1069,8 +1088,11 @@ intact or stronger. What changed is the *framing* of the third: we do not
 out-encode a tuned deep model on DNA both sides hold, we have access to DNA it
 never sees. That is a narrower claim and a much harder one to attack.
 
-Four of the five withdrawals were caught by **our own tests**, and the fifth —
-the nearest-gene orientation confound — by a teammate's. None were caught by
+Every withdrawal but one was caught by **our own tests**; the exception, the
+nearest-gene orientation confound, was caught by a teammate's. The newest one
+came from chasing down a teammate's *unexplained number* rather than a claim:
+reproducing ρ 0.472 on the human matrix showed our human model was the wrong
+shape for its data, and the transfer interval was resting on that. None were caught by
 re-reading the text. The pattern from Appendix E holds: the data needed was
 already on disk, and the bottleneck was that nobody had asked the number to
 defend itself.
@@ -1882,6 +1904,131 @@ Checked on a basis with the redundancy removed, because the gap was measured on
 selected columns: on 427 columns ridge reaches **95.6%** of boosting's ρ, and
 ridge on the raw 6,232 collapses to 0.423 from collinearity. **The redundancy was
 concealing the additivity from the linear model, not manufacturing it.**
+
+### Does the human baseline reproduce ρ 0.472, and what produces it?
+
+Part 3's cross-kingdom sentence had carried, for weeks, a figure with no
+provenance: a teammate's grid search reaching ρ 0.472 on the human iRF matrix
+against the 0.404 this harness measures. The settings arrived on 16 October
+(`Jacky/human-boundary/HUMAN_BASELINE_SETTINGS.md`): **400 selected columns,
+1,000 estimators, every other XGBoost knob at library defaults**, from a personal
+script predating the merged pipeline. Three arms on the same folds of
+`data/raw/human_feature_matrix.csv` (17,421 guides × 6,233 columns), 3 seeds × 5
+folds (`src/sgrna/human_baseline.py`, `results/human_baseline.csv`):
+
+| arm | columns | XGBoost settings | ρ |
+|---|---:|---|---:|
+| `harness_default` | 300 | champion | 0.4036 ± 0.0128 |
+| `jacky_cols_only` | 400 | champion | 0.4074 ± 0.0148 |
+| **`jacky_400_1000`** | **400** | **library defaults, 1,000 trees** | **0.5076 ± 0.0149** |
+
+**It reproduces, and overshoots: 0.5076 against the 0.472 quoted.** The third
+arm exists because the first two differ in one thing and the quoted
+configuration differs in two, and only one of them can be doing the work. The
+answer is unambiguous — **the column count contributes +0.0038, inside a single
+fold's spread; the hyperparameters contribute +0.1002.**
+
+*Why the design settles it.* Holding the folds, the selector and the seeds fixed
+and moving one factor at a time is the only way to attribute a difference
+between two historical runs, because the two differences are confounded in the
+original comparison. Without `jacky_cols_only` the natural reading would have
+been "human needs more features", which is the opposite of true.
+
+*Why the library defaults are not a detail.* XGBoost defaults to
+`max_depth=6, learning_rate=0.3`; the champion uses `4` and `0.05` with
+`subsample=0.8, colsample_bytree=0.8`. On a 17,421-row matrix that is a
+substantially higher-capacity, faster-learning model, not a tweak — and the
+teammate's note records that on human `n_estimators` kept improving with no
+plateau, unlike bacteria.
+
+**What this costs the report.** Not the cross-kingdom conclusion — nothing
+transfers either way, and that survives (below) — but one sentence supporting it
+does, and the assumption underneath both: **the champion is tuned on one
+*E. coli* screen and is mis-specified by 0.10 ρ on a matrix of different
+shape.** Every external arm here — TevSpCas9, *C. rodentium*, eSpCas9, Cui — is
+fitted with it, and each therefore reports a lower bound on what a locally-tuned
+model would reach. For the comparisons that are *differences between arms on one
+dataset* this mostly cancels; for absolute transfer figures it does not, which is
+exactly where it bit.
+
+**Which knob, and what it says.** The quoted configuration changes three things
+at once, so each was moved alone from the 400-column reference
+(`results/human_baseline_knobs.csv`):
+
+| change from the champion | ρ | Δ |
+|---|---:|---:|
+| `max_depth` 4 → 6 | 0.4659 | **+0.0585** |
+| `learning_rate` 0.05 → 0.3 | 0.4490 | +0.0416 |
+| `n_estimators` 400 → 1,000 | 0.4435 | +0.0361 |
+| no row/column subsampling | 0.3999 | −0.0075 |
+| all three (= `jacky_400_1000`) | 0.5076 | +0.1002 |
+
+Sub-additive, as three capacity knobs should be. **The largest single term is
+tree depth** — not shrinkage, not tree count — and depth is the interaction-order
+knob, which makes this a candidate statement about the signal rather than about
+our settings. Depth also buys plain capacity, though, so the hyperparameter
+cannot establish it alone.
+
+**The direct test says the human signal really is less additive.** Appendix B's
+model-class comparison found *E. coli*'s signal overwhelmingly additive: ridge
+reaches **95.6%** of boosting's ρ. Repeating exactly that test on the human
+matrix, on the same 400 selected columns, standardised, with `RidgeCV`
+(`results/human_additivity.csv`):
+
+| | *E. coli* | human |
+|---|---:|---:|
+| boosting | 0.608 | **0.5076** |
+| ridge | 0.577 | **0.3232** |
+| **ridge / boosting** | **95.6%** | **63.7%** |
+
+A straight line gets within 0.03 ρ of boosting in *E. coli* and falls 0.18 short
+in human. **Human guide efficiency carries interaction structure that *E. coli*'s
+does not**, and that is why a champion tuned on a nearly-linear signal — shallow
+trees, heavy shrinkage — is the wrong model there. Against our champion alone
+ridge still reaches 79.3%, which is the same fact from the other side: the
+champion's effective capacity is close to a linear model's.
+
+This also **bounds the caution above**. The champion fails to travel across
+kingdoms because the shape of the signal changes, not because hyperparameters are
+fragile in general — which is consistent with it transferring without incident
+across the bacterial sets, where the near-additivity measured above holds. The two
+percentages are not measured on an identical basis (*E. coli*'s on 427
+decorrelated columns, human's on 400 selected ones), so the comparison is a
+factor-of-magnitude one, not a precise ratio.
+
+**And it did bite, once.** Part 3's boundary claim had both transfer directions
+negative with intervals excluding zero — measured with the human model fitted at
+champion settings. Refitted at the human-appropriate ones and bootstrapped over
+test rows (`src/sgrna/kingdom_transfer.py`, 6,216 columns shared by name, 2,000
+resamples):
+
+| direction | champion | human-fitted | human-fitted, seeds pooled | 95% CI |
+|---|---:|---:|---:|---|
+| *E. coli* → human | −0.0462 | −0.0367 | −0.0393 | [−0.0542, −0.0242] |
+| human → *E. coli* | −0.0155 | −0.0055 | **−0.0060** | **[−0.0227, +0.0111]** |
+
+The first two columns are means of three single-seed fits; the third averages the
+three seeds' predictions before scoring, which is what the interval is
+bootstrapped on. The two conventions agree to 0.003 and are kept separate rather
+than mixed.
+
+Reproduces the previously quoted −0.048 and −0.017 at champion settings, and
+then moves one direction to zero. **The claim that both intervals exclude zero
+was an artefact of the undertuned human model** and is withdrawn (Part 5); the
+boundary itself is not, since neither direction transfers. Note which direction
+moved: the one *trained* on human, which is the only one whose hyperparameters
+were wrong for its training data. The seed-to-seed spread of three fits is model
+noise and says nothing about this — at ρ this close to zero only resampling the
+test rows can, which is why the interval is bootstrapped rather than taken from
+the seeds.
+
+The one place it could bite is Finding 5's falsification test, where family A
+adds −0.009 on Cui's CRISPRi screen. An underfit model that could not use the
+flank columns at all would produce the same null. It did not happen here: given
+nothing else, those same 348 columns reach ρ **0.1333** on Cui under gene-grouped
+CV, so the model demonstrably reads them and still gains nothing from them
+alongside the base — which is a displacement result inside a 300-column budget,
+not an inability to fit.
 
 ### What other long-range features could be built without new data?
 
@@ -2707,12 +2854,12 @@ against Crossref metadata rather than transcribed from memory.
 
 ## Appendix E — Withdrawn claims
 
-Twenty-nine claims have been withdrawn and thirteen bugs found. They are not listed
+Thirty claims have been withdrawn and fourteen bugs found. They are not listed
 here, so that this document reads as a statement rather than a diary; they are in
 `docs/FINDINGS_LOG.md` in date order and in `local/MISCONCEPTIONS.md`, outside
 the repo, with the cause of each.
 
-Three of the eleven bugs share one shape and are worth naming as a class:
+Three of the fourteen bugs share one shape and are worth naming as a class:
 **a computation that fails and reports success.** `b_energy` wrote a feature
 block with zero feature columns because its builder catches import errors per
 guide; a selector control compared 300 columns against 300 because
