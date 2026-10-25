@@ -4597,3 +4597,60 @@ argues against the simplest form of it.
   honest inventory of what distinguishes this model, with the flank gain restated
   as +30% relative rather than "slightly better", and four concrete uses for a
   cleavage-efficiency prediction.
+
+---
+
+## 25 October 2026 (tidy pass) — a sanity sweep, and one wrong constant
+
+A structural audit of the report and repo rather than new science. What it found:
+
+**A wrong reference figure, propagated into three places.** The data ablation
+scored SLICER on crisprHAL 2's shipped SpCas9 partition and compared it to
+**0.6971** — but 0.6971 is their published *configuration* re-trained on **our
+five curated folds**, a different split. Their reported figure for that partition
+is **0.695**, and re-running their shipped weights on it gives 0.6940. Every
+margin in that table was therefore 0.0021 too harsh: the full-data arm is
+**+0.0035**, not +0.0014. Corrected in the report, the README and
+`data_ablation.py`, with a note in the report spelling out which number belongs
+to which split, since the two are three thousandths apart and easy to swap.
+
+**A statement I had made true only in the documentation.** RESULTS.md and
+`rederive.py` said `colab/crisprhal_tune_matched.py` "now writes" the two matched
+search files. It did not — it wrote `/content/crisprhal_tune_matched.csv` with no
+`is_published_config` column. The script now writes `crisprhal_matched_folds.csv`
+under that name with the flag, so the claim is true. And
+`matched_search_folds.csv` turned out not to be a GPU artefact at all: it is a
+join of `tuning.csv`, `crisprhal_rerun.csv`, `crisprhal_tuned_folds.csv` and the
+Colab finals, now re-derived as one and **agreeing to 0.0001**.
+
+**`seqnet_matched.csv` re-derives exactly** on the two arms completed at commit
+time (f100 0.5203, f250 0.5247, to four decimals), leaving one genuine
+GPU-only file out of the original thirteen.
+
+**The held-out partition's status, written down before it is overclaimed.**
+crisprHAL's shipped SpCas9 split has now carried seven arms: the original SLICER
+run plus six in the data ablation. Nothing was ever selected on it — every
+feature set, hyperparameter and split was fixed before it was read — so it stays
+confirmatory, but "evaluated once" is no longer true of it, and Part 4 now says
+so rather than leaving it to be assumed.
+
+**Structural checks that passed:** no duplicate headings, all twelve findings
+present and numbered, every appendix referenced exists, no broken local links in
+the report, README or RESULTS.md, all 48 claim rows in the index cite an evidence
+file that exists, all 35 cited modules exist, and the counts quoted in the text
+(eleven withdrawals, fourteen bugs, eleven families, the 6% grouping tax) agree
+wherever they appear. Load-bearing numbers were re-read from their CSVs and
+match: +0.164, 0.946, 0.7842/0.7821, +0.0115/+0.0172/+0.0043, +0.2030, +0.0065 /
+−0.0007, the human arms and the kingdom intervals.
+
+**Also moved:** Finding 12's interpretability block was 35 lines of methods in
+the middle of a comparison, and is now three sentences there with the detail —
+including the per-fold hyperparameter table showing depth 4 was inherited and the
+folds disagree about it — in Appendix B.
+
+**Outstanding, deliberately:** `abund_local_vs_mappability.csv` stays
+unreproducible (the definition of its `uniq` columns is lost; the claim it
+supports rests on `dissection_supercoiling`, which does reproduce), and a
+duplicate of `lit_review/beyond_QCT_literature_review.md` sits at the project
+root — flagged rather than deleted, since nothing here is under version control
+outside `RSI-Crispr/`.

@@ -9,7 +9,8 @@ every arm on one held-out set that nothing was fitted on.
 
 **The yardstick** is crisprHAL 2's own shipped WT-SpCas9 test partition -- 6,748
 guides at a 378 nt context (protospacer at offset 189; all of them locate in our
-curated feature build). Their published model scores rho 0.6971 on it. No split,
+curated feature build). Browne et al. report rho **0.695** on it, and our re-run
+of their shipped weights gives 0.6940 (`crisprhal_rerun.csv`). No split,
 feature or hyperparameter in this project was chosen with reference to it.
 
 **The arms**, all champion XGBoost on 300 columns selected inside the training
@@ -43,7 +44,10 @@ from .curated_ablation import _base, _block
 OUT = config.RESULTS / "data_ablation.csv"
 TEST = config.EXTERNAL / "crisprHAL" / "data" / "WT-SpCas9_testing_data.csv"
 PROTO_OFFSET = 189          # verified: 100% of their test guides match at 189
-HAL_PUBLISHED = 0.6971      # their reported rho on this partition
+HAL_PUBLISHED = 0.695       # Browne et al.'s reported rho on THIS partition.
+                            # Not 0.6971, which is their published *configuration*
+                            # scored on our five curated folds -- a different
+                            # number for a different split, and easy to confuse.
 
 
 def _test_protospacers() -> set[str]:

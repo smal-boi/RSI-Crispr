@@ -104,7 +104,7 @@ marked **[P]** published or **[C]** curated. They are not interchangeable.
 ## † Files whose producer was lost, and what re-deriving them found
 
 Thirteen files cited above were written by code no longer in `src/` or `colab/`.
-`python -m sgrna.rederive` now reproduces ten of them from committed code and
+`python -m sgrna.rederive` now reproduces eleven of them from committed code and
 **compares rather than overwrites** — re-derivation is a check, and the stored
 file stays authoritative. Verdicts in `results/rederivation_check.csv`, outputs
 in `results/rederived/`:
@@ -121,8 +121,9 @@ in `results/rederived/`:
 | `d_mechanics_reconstructibility.csv` | agrees in distribution, median 0.832 against 0.845; the file is keyless so rows cannot be aligned |
 | `additivity_reduced.csv` | **two of four arms exact, two wrong** — see below |
 | `abund_local_vs_mappability.csv` | **not reproducible**: the definition of its `uniq` columns is lost. Exact-20-mer uniqueness is near-constant in *E. coli* and gives correlations an order of magnitude weaker, so the stored quantity was something else |
-| `seqnet_matched.csv` | re-derivable but not re-run here: `python -m sgrna.seqnet --flank {100,250,500,1000} --out results/seqnet_matched.csv` |
-| `crisprhal_matched_folds.csv`, `matched_search_folds.csv` | GPU artefacts transcribed from a Colab log. `colab/crisprhal_tune_matched.py` now writes them, but rerunning needs a T4 |
+| `seqnet_matched.csv` | **exact** on the two arms re-run so far (f100 0.5203, f250 0.5247, to four decimals); f500 and f1000 use the identical code path and were still running at commit time. `python -m sgrna.seqnet --flank {100,250,500,1000} --out results/rederived/seqnet_matched.csv` |
+| `matched_search_folds.csv` | **agrees to 0.0001** — it is a join of four local files, not a GPU artefact, and is now re-derived as one |
+| `crisprhal_matched_folds.csv` | the only genuine GPU artefact. `colab/crisprhal_tune_matched.py` now writes it under exactly that name with the `is_published_config` flag, so a rerun reproduces it — but the rerun needs a T4 |
 
 **The exercise paid for itself.** `additivity_reduced.csv`'s two reduced arms
 re-derive to within 0.0007 (and its XGBoost column bit-identically), but its two

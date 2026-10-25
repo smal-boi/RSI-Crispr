@@ -831,7 +831,7 @@ SLICER trained on that same data.
 | | the other model | SLICER, same data | margin |
 |---|---:|---:|---:|
 | **Noshay's cohort** — 13,880 guides, `cut_score`, 5 folds | iRF **0.4785** | **0.6060** | **+0.128** |
-| **crisprHAL's cohort** — their shipped SpCas9 split | **0.6971** | **0.6985** | +0.001 |
+| **crisprHAL's cohort** — their shipped SpCas9 split | **0.695** | **0.6985** | +0.004 |
 | **crisprHAL's cohort** — our five curated folds | 0.7051 | 0.7218 | +0.017 |
 
 *The iRF row is our reimplementation of Noshay et al.'s model* (`noshay_replicate.py`,
@@ -853,16 +853,25 @@ out to be bought with rows.** The comparison above varies the condition; this on
 varies the *data* and nothing else. Same champion XGBoost, same 6,517 columns,
 same 300-column budget, selection fitted inside the training rows — scored every
 time on crisprHAL 2's **own held-out WT-SpCas9 test partition** (6,737 of their
-6,748 guides locate in our feature build; their published model scores 0.6971 on
-it). `data_ablation.py`, `results/data_ablation.csv`:
+6,748 guides locate in our feature build; Browne et al. report **0.695** on it,
+and their shipped weights re-run here give 0.6940). `data_ablation.py`,
+`results/data_ablation.csv`:
 
 | training data | n | ρ | against crisprHAL 2 |
 |---|---:|---:|---:|
-| all curated rows, **base only** (no family A) | 26,830 | 0.5431 | −0.154 |
-| Noshay's 1,222-gene panel, **Noshay's own `cut_score`** | 6,860 | 0.6537 | −0.043 |
-| the same rows, curated label | 6,860 | 0.6600 | −0.037 |
-| random curated rows, count matched (3 draws) | 6,860 | 0.6683 | −0.029 |
-| **all curated rows** | **26,830** | **0.6985** | **+0.0014** |
+| all curated rows, **base only** (no family A) | 26,830 | 0.5431 | −0.152 |
+| Noshay's 1,222-gene panel, **Noshay's own `cut_score`** | 6,860 | 0.6537 | −0.041 |
+| the same rows, curated label | 6,860 | 0.6600 | −0.035 |
+| random curated rows, count matched (3 draws) | 6,860 | 0.6683 | −0.027 |
+| **all curated rows** | **26,830** | **0.6985** | **+0.0035** |
+
+*Two numbers for one split, and they are not interchangeable:* **0.695** is what
+Browne et al. report on this partition and is the reference above; **0.6971** is
+their published *configuration* re-trained on our five curated folds, which is a
+different split and appears only in the matched-search table. The SLICER figure
+here, 0.6985, is the independently re-derived one; the recorded run of the same
+setup gives 0.6997 (`their_split_slicer.csv`), which is the 0.005 quoted in the
+two-split table above.
 
 Read down the middle three rows and the move from "the data Noshay published" to
 "the data crisprHAL published" decomposes: the **label** is worth **+0.0063**,
@@ -896,37 +905,14 @@ and threshold (`complexity.py`). That is **125×** fewer fitted values, or 43× 
 the inclusive count — the same order as the compute ratio, which is not a
 coincidence.
 
-Three numbers say more about interpretability than any of those totals, and have
-no CNN equivalent.
-
-**`max_depth = 4` caps the interaction order at four** — no term in the fitted
-model combines five features. That is a structural guarantee, but it is a
-guarantee about *this configuration*, and the configuration was **inherited, not
-chosen**: depth 4 comes from `FINAL_baseline_ecoli_sgRNA_model_5seeds.py` along
-with `learning_rate=0.05`, 400 trees and the 300-column budget. It was tested
-afterwards rather than selected, and it survives the test — a 627-draw nested
-search buys only +0.0131 ρ, and XGBoost's champion and LightGBM at unrelated
-defaults land within 0.0002 of each other. But the five per-fold winners chose
-depths of 4, 8, −1, 3 and −1 while three of them chose `num_leaves = 8`: what
-the data wants is **low capacity**, which depth is only one way to express. So
-the honest statement is that the fitted model is shallow, not that 4 is optimal
-— and on the human matrix, where the signal is not additive, depth 6 is worth
-+0.0585 (Appendix B).
-
-**280 of the 300 offered columns are ever split on, 45 carry half the total gain,
-and the top ten carry 19.5%** — so the fitted function is spread over tens of
-named quantities rather than concentrated in a few or diffused over thousands.
-
-**A ridge on a decorrelated basis reproduces 95.6% of its ρ** (Appendix B).
-*What ridge is here, since the comparison only means something if that is clear:*
-not a line through two numbers, but a **weighted sum with one coefficient per
-column** — 428 fitted numbers on the 427-column basis, a hyperplane in 427
-dimensions. It is "linear" in the sense that each column contributes a fixed
-amount per unit, with no term depending on two columns at once. That is exactly
-what makes the comparison informative: boosting may use interactions and ridge
-may not, so the 95.6% measures how much of the model's accuracy needs
-interactions at all. The answer is about 4% — which is why the account in
-Findings 3 and 4 can be read off the model as a set of per-column effects.
+Three things say more about interpretability than any of those totals, and have
+no CNN equivalent: the fit **caps interaction order at four** by construction,
+**45 of the 300 offered columns carry half its gain** (280 are ever split on, the
+top ten hold 19.5%), and a **ridge reproduces 95.6% of its ρ** on a decorrelated
+basis — so about 4% of the accuracy needs interactions at all, and the rest reads
+as a sum of per-column effects in named units. What those numbers do and do not
+license, including the fact that depth 4 was inherited rather than chosen, is in
+Appendix B.
 
 **And on a screen neither model trained on, their raw-sequence model transfers
 better than our engineered one** — \|ρ\| 0.0867 against 0.0609 zero-shot on Cui's
@@ -1205,16 +1191,25 @@ been spent too. **No untouched external set remains.**
 
 Two existing external checks, neither a substitute for that: the baseline anchor
 reproduces Noshay et al.'s published figure through our harness, and SLICER
-scores 0.6997 on crisprHAL 2's own shipped split, a partition untouched during
-development. **The curated five-fold figures carry an unknown
-adaptive-overfitting component**, and the paper should say so.
+scores 0.6997 on crisprHAL 2's own shipped SpCas9 split, a partition untouched
+during development.
+
+*That partition's status, stated once so it is not overclaimed later.* It has now
+carried **seven** arms: the original SLICER run, and six more in the data
+ablation (Finding 12). None of them selected anything — every feature set,
+hyperparameter and split was fixed before the partition was read, and the arms
+differ only in which training rows they see — so it remains confirmatory rather
+than contaminated. But "evaluated once" is no longer true of it either, and a
+seventh reading is the point at which that should be written down rather than
+assumed. **The curated five-fold figures carry an unknown adaptive-overfitting
+component**, and the paper should say so.
 
 Remaining before submission:
 
 | | item | cost |
 |---|---|---|
 | 1 | ~~eSpCas9 final evaluation~~ | **done, and it is a tie** — ρ 0.7842 against 0.7821 on crisprHAL's own eSpCas9 split with their published weights, at 47,591 training guides. Also corrected: eSpCas9 was never an untouched holdout (above) |
-| 2 | ~~crisprHAL 2 given a search of its own~~ | **run 16 October, and it found nothing**: 0.6987 against their published 0.6971, with their published configuration winning the inner search in 4 of 5 folds. The margin against their *best known* configuration is **+0.0161**. Still not a fully matched search — ours used 97–157 draws per fold, theirs 5–8, so ~40 GPU-h would be needed to equalise (Appendix B) |
+| 2 | ~~crisprHAL 2 given a search of its own~~ | **run 16 October, and it found nothing**: 0.6987 against the 0.6971 their published *configuration* reaches on these same folds, with that configuration winning the inner search in 4 of 5 folds. The margin against their *best known* configuration is **+0.0161**. Still not a fully matched search — ours used 97–157 draws per fold, theirs 5–8, so ~40 GPU-h would be needed to equalise (Appendix B) |
 | 3 | ~~orientation controls~~ | **done** — Jacky, Finding 6 |
 | 4 | ~~human baseline re-tuned at the teammate's settings~~ | **done, and it reproduces: ρ 0.5076 against the 0.472 quoted.** The settings arrived 16 October; the gain is hyperparameters, not columns (+0.1002 against +0.0038), and the reason is that the human signal is far less additive than *E. coli*'s (ridge/boosting 63.7% against 95.6%), so the champion is the wrong shape for it by 0.10 ρ. **This cost a claim**: refitting the human side moved one cross-kingdom transfer direction from −0.016 to −0.006 [−0.023, +0.011], i.e. to zero, so "negative in both directions with intervals excluding zero" is withdrawn in favour of "no transfer in either direction" (Part 5, Appendix B) |
 | 5 | ~~conditional test of the GC hypothesis within matched GC strata~~ | **done** — Finding 5 |
@@ -2232,6 +2227,53 @@ the original number measured an unsearched hyperparameter rather than a property
 of the matrix. The reduced basis still helps a linear model, by **+0.009**
 (0.5036 against 0.4945) rather than by +0.071 — a real effect and a small one
 (`python -m sgrna.rederive --only additivity_reduced`).
+
+### What the interpretability numbers license, and what they do not
+
+Finding 12 quotes three of them. Each is worth stating precisely, because two are
+weaker than they look and one is stronger.
+
+**`max_depth = 4` caps the interaction order at four** — no term in the fitted
+model combines five features, which is a structural guarantee rather than an
+empirical observation. But it is a guarantee about *this configuration*, and the
+configuration was **inherited, not chosen**: depth 4 comes from
+`FINAL_baseline_ecoli_sgRNA_model_5seeds.py` along with `learning_rate=0.05`,
+400 trees and the 300-column budget. It was tested after the fact rather than
+selected, and it survives the test — a 627-draw nested search buys only +0.0131 ρ,
+and XGBoost's champion and LightGBM at unrelated defaults land within 0.0002 of
+each other on the curated cohort with family A. What the search does *not* do is
+endorse the number: the five per-fold winners chose depths of **4, 8, −1, 3 and
+−1**, while three of them chose `num_leaves = 8`.
+
+| fold | `max_depth` | `num_leaves` | `n_estimators` | Δρ over the inherited default |
+|---:|---:|---:|---:|---:|
+| 1 | 4 | 63 | 1,600 | +0.0139 |
+| 2 | 8 | 8 | 1,600 | +0.0111 |
+| 3 | −1 | 8 | 1,600 | +0.0149 |
+| 4 | 3 | 127 | 1,600 | +0.0117 |
+| 5 | −1 | 8 | 1,600 | +0.0136 |
+
+What the folds agree on is **low capacity** and 1,600 trees at a small learning
+rate; depth is only one of the two ways the space offers to express it, and
+`num_leaves = 8` is the other. So the defensible statement is that the fitted
+model is shallow, not that 4 is optimal — and the setting is data-specific, since
+on the human matrix, where the signal is not additive, depth 6 is worth +0.0585.
+
+**280 of 300 columns are ever split on, 45 carry half the gain, top ten 19.5%.**
+This is the weakest of the three as an interpretability claim: it says the model
+is neither a two-feature rule nor an undifferentiated smear, which rules out the
+two extremes and little else.
+
+**Ridge reproduces 95.6% of boosting's ρ on a decorrelated basis**, and this one
+is the strongest. *What ridge is here, since the comparison means nothing if that
+is unclear:* not a line through two numbers, but a **weighted sum with one
+coefficient per column** — 428 fitted numbers on the 427-column basis, a
+hyperplane in 427 dimensions. "Linear" means each column contributes a fixed
+amount per unit with no term depending on two columns at once. That is exactly
+what makes the comparison informative: boosting may use interactions and ridge
+cannot, so the gap measures **how much of the accuracy needs interactions at
+all**. About 4% — which is why the account in Findings 3 and 4 can be read off
+the model as a set of per-column effects rather than inferred from attributions.
 
 ### Does the human baseline reproduce ρ 0.472, and what produces it?
 

@@ -20,8 +20,8 @@ guides — kept because reproducing it to four decimal places is how this pipeli
 is checked, not because it is the current baseline.
 
 **Working figure (curated frame):** base + family A, ρ **0.7218** on the curated
-five folds; **0.6985** on crisprHAL 2's own held-out partition against **0.6971**
-for their published model.
+five folds; **0.6985** on crisprHAL 2's own held-out partition against the
+**0.695** Browne et al. report for it.
 
 **Against the state of the art: parity at a fraction of the cost.** On
 crisprHAL 2's **own two published splits**, evaluated against their own published
@@ -34,6 +34,19 @@ CNN–BiGRU on the same machine — **92×**, or **~150×** counted in CPU-secon
 parallelise better than we do and wall-clock understates it. Comparable memory
 either way (3.76 GB against 4.55 GB peak), and ~190× with a LightGBM selector
 (`results/RESULTS_archive_2026-10-10.md` §15a).
+
+**And against the model this project extends, on its own data, it is not close.**
+Our reimplementation of Noshay et al.'s iRF scores ρ **0.4785** on their 13,880
+guides (reproducing their published Pearson 0.502 / R² 0.249 at 0.488 / 0.235);
+SLICER on the identical rows and label reaches **0.6060** — **+0.128**, of which
++0.049 is the model class and **+0.078 is the flank features**. So the two
+comparisons say different things and both are real: Noshay's model is beaten
+decisively, crisprHAL 2 is matched.
+
+**On size**, crisprHAL 2 holds **790,533** trainable parameters across 37 layers;
+SLICER stores **6,348 leaf values** over 400 trees, or 18,244 numbers counting
+each node's feature index and threshold — 125× fewer fitted values, the same
+order as the compute ratio.
 
 On **our own** curated five folds we lead by more — base + family A reach
 **0.7218** against their **0.7051** at their best known configuration, paired

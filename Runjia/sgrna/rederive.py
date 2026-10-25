@@ -19,10 +19,11 @@ working.
     python -m sgrna.rederive --only grouped_retention selector_control
     python -m sgrna.rederive --list
 
-Two of the thirteen are not here. `crisprhal_matched_folds.csv` and
-`matched_search_folds.csv` are GPU artefacts transcribed from a Colab run log;
-`colab/crisprhal_tune_matched.py` now writes them directly, so a rerun would
-produce them, but rerunning costs a T4 and cannot happen on this machine.
+One of the thirteen is not here. `crisprhal_matched_folds.csv` is a GPU
+artefact: `colab/crisprhal_tune_matched.py` now writes it under that exact name
+with the `is_published_config` flag, so a rerun reproduces it, but the rerun
+needs a T4 and cannot happen on this machine. `matched_search_folds.csv`, which
+was transcribed alongside it, is only a join of four local files and *is* here.
 """
 
 from __future__ import annotations
@@ -380,8 +381,34 @@ def their_split_slicer() -> pd.DataFrame:
         fit_seconds=round(time.time() - t0, 1))])
 
 
+def matched_search_folds() -> pd.DataFrame:
+    """The per-fold comparison table, assembled from its four sources.
+
+    This one is a join, not a model run: SLICER's tuned and untuned folds from
+    the local search, crisprHAL 2 at its published configuration, the same model
+    given a single-split search, and the Colab nested search's outer scores.
+    """
+    t = pd.read_csv(config.RESULTS / "tuning.csv").sort_values("fold")
+    hal = pd.read_csv(config.RESULTS / "crisprhal_rerun.csv")
+    hal = hal[hal["arm"] == "our_folds"].groupby("fold")["spearman"].mean()
+    single = (pd.read_csv(config.RESULTS / "crisprhal_tuned_folds.csv")
+              .groupby("fold")["spearman"].max())
+    m = pd.read_csv(config.RESULTS / "crisprhal_matched_folds.csv")
+    matched = m[m["stage"] == "final"].set_index("fold")["spearman"]
+    d = pd.DataFrame({
+        "fold": t["fold"].to_numpy(),
+        "slicer_tuned": t["rho_tuned"].to_numpy(),
+        "slicer_untuned": t["rho_default"].to_numpy(),
+        "hal_default": hal.reindex(t["fold"]).to_numpy(),
+        "hal_single_split": single.reindex(t["fold"]).to_numpy(),
+        "hal_matched": matched.reindex(t["fold"]).to_numpy()})
+    d["d_matched"] = d["slicer_tuned"] - d["hal_matched"]
+    return d
+
+
 CHEAP = {
     "grouped_retention": grouped_retention,
+    "matched_search_folds": matched_search_folds,
     "d_mechanics_reconstructibility": d_mechanics_reconstructibility,
     "abund_local_vs_mappability": abund_local_vs_mappability,
     "final_eval_metric_bootstrap": final_eval_metric_bootstrap,
