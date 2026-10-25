@@ -60,15 +60,26 @@ own published per-replicate counts rather than inherited from a different label,
 leaving ~0.22 ρ unaccounted for.
 
 **It is the DNA, not the enzyme — and it is what makes a model portable.**
-The flank features are worth **+0.104 ρ** on the genome-wide *E. coli* eSpCas9
-screen (a different nuclease) under contiguous-arc CV, with the
-long-range-dominant shape reproduced. In cross-organism *model* transfer they
-carry most of the signal: *E. coli* → *C. rodentium* reaches **ρ 0.700**, 92% of
-a locally-trained model, and the reverse direction goes 0.478 → **0.628** once
-the flank features are added. Decomposed, it is the **long-range windows** that carry the crossing in both
-directions (+0.107 of the +0.150 going *C. rodentium* → *E. coli*) — so the
-gradient holds in both organisms even though *C. rodentium*'s own 236 kb screen
-is too narrow for a correlation to reveal it (`results/RESULTS_archive_2026-10-10.md` §15).
+Transfer, one variable at a time: *transferred* is an imported model with no
+retraining, *local* is the same architecture trained on the target, and the last
+column is how much of the transferred ρ the flank features supply.
+
+| changed | from → to | transferred | local | retained | of which family A |
+|---|---|---:|---:|---:|---:|
+| nuclease | SpCas9 → eSpCas9 | 0.689 | 0.784 | 88% | +0.098 |
+| nuclease + organism | *E. coli* → *C. rodentium* | 0.698 | 0.766 | 91% | +0.072 |
+| the same, reversed | *C. rodentium* → *E. coli* | 0.628 | 0.708 | 89% | **+0.150** |
+| kingdom | *E. coli* → human | −0.039 | 0.508 | 0% | — |
+| assay | cleavage → dCas9 silencing | 0.061 | 0.458 | 13% | — |
+
+**Changing the nuclease or the host costs about a tenth of the performance;
+changing the kingdom or the assay costs all of it.** In the hardest bacterial
+direction — a model imported from a 236 kb *C. rodentium* screen into the
+*E. coli* genome — the flanks carry +0.150 of the 0.628 that arrives. Decomposed
+further, it is the **long-range windows** that do it (+0.107 of the +0.150), so
+the gradient holds in both organisms even though *C. rodentium*'s own screen is
+too narrow for a correlation to reveal it
+(`results/RESULTS_archive_2026-10-10.md` §15).
 
 **And where it stops.** Carried to Noshay et al.'s human matrix — 6,216 shared
 columns, so no change of representation — transfer is **−0.039
@@ -118,8 +129,14 @@ Permutation floors run −0.002 to +0.001.
 cohort** (`python -m sgrna.curated_ablation --all`,
 [`results/ablation_curated.csv`](results/ablation_curated.csv)). The ranking
 transfers almost exactly — rank ρ 0.97 against the published table — while every
-family inflates, median 3.3×, because the curated base carries none of the 63
-hand-named summary columns. Family A +0.164, `d_supercoiling` +0.139, `i_shape`
+family inflates, median 3.3×. **The inflation is not noise removal and not the
+base representation**: measured directly, the per-unit effect of flank GC on the
+score is **2.96× steeper** in the guides crisprHAL adds, and splitting those by
+host gene shows the weak relationship belongs to Noshay's 1,222-gene panel rather
+than to the particular guides in it (β +5.4 inside the panel, +17.0 outside).
+Guo's panel is a part of the genome where the flank effect is weak, so +0.080 is
+the right figure for that panel and +0.164 the right one genome-wide — neither
+is an attenuated version of the other (`python -m sgrna.curation_variance`). Family A +0.164, `d_supercoiling` +0.139, `i_shape`
 +0.120, `d_mechanics` +0.099, `g_transcription` +0.058 ρ. Appendix B3 of the
 progress report has the caveats, which matter: these are single-family
 increments over a base starved of dense continuous columns, not estimates of

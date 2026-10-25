@@ -4517,3 +4517,83 @@ from a log. Each is a *secondary* file for its row, so no claim rests on one
 alone — but this is exactly the gap `human_transfer.csv` had, and closing that one
 cost a claim. Flagged in RESULTS.md with a note that anything a paper leans on
 should be re-derived from a committed command first.
+
+---
+
+## 25 October 2026 (second pass) — the orphans re-derived, and why the family table tripled
+
+### Ten of thirteen orphan files re-derived; one claim did not survive it
+
+`src/sgrna/rederive.py` reproduces the lost-producer files from committed code
+and **compares rather than overwrites** (`results/rederivation_check.csv`,
+outputs in `results/rederived/`). Exact: `grouped_retention`,
+`selector_control`, `final_eval_metric_bootstrap` (point estimates; CIs differ
+by bootstrap noise). Within 0.2–1.2%: `portability_364`, `kmer_order_noselect`,
+`dissection_supercoiling`, `their_split_slicer` (ρ 0.6997 against 0.6985),
+`d_mechanics_reconstructibility` (median 0.832 against 0.845).
+
+**`abund_local_vs_mappability.csv` is not reproducible** — the definition of its
+`uniq` columns is lost, and exact-20-mer uniqueness, which is near-constant in
+*E. coli*, gives correlations an order of magnitude weaker. The claim it supports
+(d_supercoiling is read density) rests on `dissection_supercoiling`, which does
+reproduce.
+
+**And `additivity_reduced.csv` cost a claim.** Its two reduced arms re-derive to
+within 0.0007 and its XGBoost column bit-identically, but "ridge on the raw 6,232
+collapses to 0.423 from collinearity" holds **only at a fixed penalty**:
+`Ridge(alpha=1)` gives 0.4231, reproducing the stored number exactly, while
+`RidgeCV` over 10⁻²–10⁴ gives **0.4945**. Choosing the penalty is what ridge is
+for under collinearity, so the stored figure measured an unsearched
+hyperparameter. The reduced basis helps a linear model by **+0.009**, not +0.071.
+Withdrawn — the eleventh. The 95.6%-of-boosting figure on 427 columns is
+untouched (re-derived at 95.8%), so the additivity claim that rests on it stands.
+
+### Why every family's gain rose while the baseline rose too
+
+The objection had never been answered with a mechanism, only with exclusions.
+`curation_variance.py`: for y = βx + noise the correlation is β·sd(x)/sd(y), so
+measure all three on one label (the curated score) across row groups.
+
+| rows | n | sd(x) | sd(y) | β | r |
+|---|---:|---:|---:|---:|---:|
+| the 8,617 Noshay also published | 8,617 | 0.0431 | 2.58 | **+5.35** | +0.089 |
+| crisprHAL only, inside Noshay's gene panel | 2,045 | 0.0475 | 3.92 | **+8.63** | +0.105 |
+| crisprHAL only, outside it | 22,905 | 0.0524 | 3.38 | **+17.03** | +0.264 |
+
+**It is not spread** — sd(x) rises 1.21× and sd(y) rises 1.34×, which pushes r
+*down*. It is **β, which rises 2.96×**. The arithmetic closes: 2.96 × 1.21/1.34
+= 2.67, against an observed r ratio of 2.67.
+
+**And it is mostly the genes, not the guides.** Inside Noshay's 1,222-gene panel
+the relationship stays weak even for guides he never published (β 8.63); outside
+it, twice as steep again (β 17.03). The 2.96× factors into ×1.6 from which guides
+were published inside those genes and ×2.0 from the panel itself.
+
+So the published matrix did not measure a noisier version of the same effect — it
+measured a real effect in a **part of the genome where it is weak**. +0.080 is
+correct for Guo's panel and +0.164 is correct genome-wide; neither is an
+attenuated version of the other. Why panel genes differ is open; essentiality is
+the obvious candidate and family G's essentiality column being worth +0.00004
+argues against the simplest form of it.
+
+### Four questions answered in the report
+
+* **The two like-for-like comparisons.** On Noshay's own cohort our
+  reimplementation of his iRF scores 0.4785 (reproducing his published 0.502
+  Pearson / 0.249 R² at 0.488 / 0.235) against SLICER's 0.6060 — **+0.128**, of
+  which +0.049 is the model class and +0.078 is family A. On crisprHAL's cohort
+  it is parity. The earlier data-ablation table was printed with crisprHAL 2's
+  figure beside under-trained SLICER arms, which reads as a model comparison and
+  is not one; the caveat is now explicit.
+* **`max_depth = 4` is inherited, not tuned.** It comes from the shared baseline
+  script. It survives testing — a 627-draw search buys +0.0131 — but the five
+  per-fold winners chose depths 4, 8, −1, 3, −1 while three chose
+  `num_leaves = 8`. What the data wants is low capacity; depth is one way to say
+  it.
+* **What ridge is**, since the 95.6% figure depends on it: one coefficient per
+  column, 428 numbers on the 427-column basis — a hyperplane, not a line. The
+  comparison measures how much accuracy needs interactions at all: about 4%.
+* **One representational change, one piece of infrastructure, nine nulls** — the
+  honest inventory of what distinguishes this model, with the flank gain restated
+  as +30% relative rather than "slightly better", and four concrete uses for a
+  cleavage-efficiency prediction.
