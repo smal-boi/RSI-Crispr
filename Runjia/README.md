@@ -12,9 +12,12 @@ crisprHAL 2's **own two published splits**, evaluated against their own publishe
 weights, SLICER is statistically equivalent to it — Δρ **+0.0021**, 95% CI
 [−0.0031, +0.0072] on eSpCas9 (inside a pre-declared ±0.01 margin) and +0.005 on
 SpCas9 — while reaching a given accuracy on about **half the labelled guides**.
-Our five-fold run takes **1.4 min of CPU** against **105 min** for their
-CNN–BiGRU on the same machine: **~74× less time at comparable memory** (4.03 GB
-vs 4.55 GB peak), ~190× with a LightGBM selector (`RESULTS.md` §15a).
+Our five folds take **69 s of wall-clock** against **105 min** for their
+CNN–BiGRU on the same machine — **92×**, or **~150×** counted in CPU-seconds
+(65.8 s per fold against ~10,000), which is the figure to lead with because they
+parallelise better than we do and wall-clock understates it. Comparable memory
+either way (3.76 GB against 4.55 GB peak), and ~190× with a LightGBM selector
+(`RESULTS.md` §15a).
 
 On **our own** curated five folds we lead by more — base + family A reach
 **0.7218** against their **0.7051** at their best known configuration, paired
@@ -129,9 +132,16 @@ double the rows +0.010 (saturating at ~20k), a larger feature cap +0.001,
 wider flanks saturate at 250–500 nt. Only sequence context outside the 20-mer
 paid, at +0.080.
 
-**All nine families together, LightGBM: ρ 0.641, 73.4th pick percentile** —
-+0.114 Spearman over the published baseline (random-row CV; the honest
-contiguous-arc figure for A + D2 + D1 is ρ 0.615).
+**All eleven families together on the curated cohort: ρ 0.7475, Δ +0.2030**
+(`python -m sgrna.curated_joint`,
+[`results/curated_joint.csv`](results/curated_joint.csv)). Adding up the eleven
+single-family gains would claim **+0.7046** — so the families realise **29%** of
+their own sum and the family table must never be read as a budget. The overlap is
+not uniform: `a_flank+d_supercoiling` realises 62% of its pair sum, and the three
+guide-only families are the most additive at **70%**, because they meet only
+through the 20-mer. On the older 13,880-row cohort the comparable figure was nine
+families at ρ 0.641, +0.114 over the published baseline (random-row CV; the
+honest contiguous-arc figure for A + D2 + D1 is ρ 0.615).
 
 **Why six of the eight families could not have helped.** The published matrix
 turns out to be a *lossless* encoding of the 20 nt protospacer — every position
@@ -145,7 +155,10 @@ champion has no feature left with residual correlation above 0.035, sixteen
 model classes span only 0.116 Spearman, and a CNN reading raw bases *ties* the
 engineered matrix on the guide (ρ 0.498 vs 0.527) while losing badly on the
 flanks (+0.019 vs +0.080). Two independent screens of the same library agree at
-ρ 0.810, so the ceiling is ~0.90 and the assay is not the constraint either.
+ρ 0.810, putting the ceiling for **Noshay's** label at ~0.90, so the assay is not
+the constraint either. (The curated crisprHAL label we now train on has its own,
+higher ceiling of 0.946 — measured, not inherited; the two numbers belong to two
+different quantities and are not interchangeable.)
 `results/RESULTS.md` §13 has the full argument; `python -m sgrna.diagnose
 --what all` reproduces it.
 
@@ -175,10 +188,10 @@ LightGBM**; the frozen XGBoost numbers above stay as the historical baseline.
 
 | file | what it is for |
 |---|---|
-| [`docs/PROGRESS_REPORT.md`](docs/PROGRESS_REPORT.md) | **start here** — the current conclusions and the evidence for them, in plain language, with a glossary, a guide to reading the statistics, and a data-source appendix |
-| [`docs/PROGRESS_REPORT.md`](docs/PROGRESS_REPORT.md) | the whole project for an outside reader: how it compares to published work, and what is original rather than imported |
-| [`results/RESULTS.md`](results/RESULTS.md) | every number, every ablation, and what each one means |
+| [`docs/PROGRESS_REPORT.md`](docs/PROGRESS_REPORT.md) | **start here** — the whole project for an outside reader: the twelve findings and the evidence for each, how it compares to published work, what is original rather than imported, where it stops, and the controls in the appendices, with a glossary and a guide to reading the statistics |
+| [`results/RESULTS.md`](results/RESULTS.md) | every number and ablation from the first phase, with what each one means — **current to 10 October 2026**; anything after that date is in the progress report and the findings log, which are the live documents |
 | [`docs/FINDINGS_LOG.md`](docs/FINDINGS_LOG.md) | chronological record, including the claims later overturned |
+| [`docs/correspondence/`](docs/correspondence) | requests to and handoffs for teammates — what was asked, what came back, and what is left for whoever picks a thread up |
 | [`lit_review/beyond_QCT_literature_review.md`](lit_review/beyond_QCT_literature_review.md) | why each feature family was tried in the first place |
 | `local/MISCONCEPTIONS.md` | *(local only, gitignored)* every claim we withdrew, why it was wrong and how it was caught |
 
@@ -201,9 +214,11 @@ RSI09/
 ├── notebooks/          ← start here
 │   ├── RSI09_pipeline.ipynb    the full walkthrough, step by step
 │   └── RSI09_quickstart.ipynb  three cells, if you just want it running
-├── docs/               project proposal
+├── docs/               PROGRESS_REPORT.md, FINDINGS_LOG.md, correspondence/, proposal
+├── colab/              scripts that need a GPU — run on free Colab, not here
 ├── archive/            earlier one-off scripts, kept for reference
-└── RSI-Crispr/         the team's shared git repo, untouched
+└── RSI-Crispr/         the team's shared git repo — `Runjia/` is a synced copy
+                        of the report, log and pipeline; edit them here, not there
 ```
 
 ---
@@ -237,7 +252,7 @@ The whole pipeline is four calls:
 import sgrna.notebook as nb
 nb.setup()                    # find the project, install what is missing
 nb.build_index()              # ~3 min once: locate all 13,880 guides
-nb.build_features("all")      # ~25 min once: all eight families
+nb.build_features("all")      # ~25 min once: all eleven families
 nb.cache_matrix()             # ~1 min once
 nb.ablate(["c_folding"])      # ~2 min per family
 ```
@@ -364,12 +379,17 @@ Short version; the full argument and citations are in the review.
   transcript E. coli actually makes — spacer **plus scaffold**, which is the
   usual reason this family gets wrongly written off.
 - **D2** and **E** address the "unknown chromosomal factors" Guo et al. named
-  but could not explain. Neither has been tested against bacterial sgRNA
-  efficiency before, which makes them the highest-risk, highest-novelty part
-  of the project.
+  but could not explain. Neither had been tested against bacterial sgRNA
+  efficiency before, which made them the highest-risk, highest-novelty part
+  of the project. D2 pays (+0.139 on the curated cohort) but **not for the stated
+  reason**: the untagged no-antibody control predicts as well as the GapR ChIP, so
+  what the family measures is DNA read density, not supercoiling.
 - **F** is a regex with a mechanism attached, and two 2026 papers behind it.
-- **G** is deliberately constrained: Guo et al. already reported the marginal
-  effects as null, so only the interaction terms are worth arguing about.
+- **G** was deliberately constrained on the reasoning that Guo et al. had already
+  reported the marginal effects as null, so only the interaction terms were worth
+  arguing about. **Measured, that is backwards** — the interactions add +0.0004
+  over their parents and the marginals carry the family's +0.058, almost all of it
+  gene geometry rather than transcription (see "Known nulls" below).
 - **H** is not about Cas9 at all — it is about the half of `cut.score` that
   measures whether the cell survived the cut.
 
@@ -379,10 +399,21 @@ Guo et al. tested **gene essentiality**, **chromosome position** and **target
 gene expression** against this exact label and reported no meaningful
 correlation. The Keio essentiality experiment in `RSI-Crispr/Jacky/` is
 therefore a replication of a published null, which is worth a paragraph in the
-paper rather than another round of tuning. `g_transcription` includes the
-marginal forms only so that null can be reproduced cleanly.
+paper rather than another round of tuning.
 
-## Two caveats worth writing into the methods
+Measured here on the curated cohort, that null splits three ways
+(`python -m sgrna.txn_interactions`,
+[`results/txn_interactions.csv`](results/txn_interactions.csv)): **essentiality
+is exactly nothing** (+0.00004 as a lone column, confirming Guo), **expression is
+not** (+0.0213), and the largest part of `g_transcription`'s +0.058 is **gene
+geometry** — distance and orientation to the nearest gene and promoter, worth
++0.0393 with every expression column removed. The family's own stated rationale,
+that transcription matters through *interactions* with local DNA, is the part that
+fails: the four interaction terms add **+0.0004** over their parents. So
+`g_transcription` is kept, and read as a positional family rather than a
+transcriptional one.
+
+## Three caveats worth writing into the methods
 
 1. **Coordinate systems.** RegulonDB reports positions on U00096.3; the genome
    here, the GapR-seq wiggles and the Bikard screen all use U00096.2, and the
@@ -395,3 +426,15 @@ marginal forms only so that null can be reproduced cleanly.
    bond/stacking tensors encode overlapping physics. Test every family both
    alone and stacked on the baseline, or a reported gain may just be a
    re-parameterisation of something already in the matrix.
+
+3. **Adaptive overfitting, and the size of it.** Many choices here were made
+   against the same curated five folds, so those figures carry an inflation
+   component that no amount of cross-validation removes. The analysis is frozen
+   as of 11 October 2026, and the component is **bounded rather than measured**:
+   sealing 20% of genes before any tuning and comparing a frozen model against a
+   dev-tuned one puts the automatable part at **+0.0005 ± 0.016** over three
+   sealing draws (`python -m sgrna.sealed_holdout`). The point estimate is zero
+   and the spread is wider than the effect, because the reference arm's own gap
+   swings ±0.02 between draws of 872 whole genes — so the defensible statement is
+   that no inflation is detectable and the adaptive component is **not larger
+   than about 0.02 ρ**. Report it as a bound, not a correction.
