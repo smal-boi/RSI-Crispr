@@ -4,8 +4,24 @@ Feature engineering for predicting sgRNA cutting efficiency in *E. coli*,
 extending the quantum chemical tensor (QCT) feature set of
 [Noshay et al. 2023, NAR 51:10147](https://doi.org/10.1093/nar/gkad736).
 
-**Frozen baseline:** XGBoost, top-300 features, 5 seeds × 5 folds
-→ R² 0.2937 ± 0.0015, Spearman 0.5278, Pearson 0.5424 on 13,880 guides.
+**The project pivoted cohorts on 13 October 2026.** Everything is now measured on
+crisprHAL 2's **curated 33,567-guide** release of the same Guo screen, with
+**crisprHAL 2 as the baseline to beat**; Noshay et al.'s 13,880-row published
+matrix and its iRF are provenance, not the comparator. Both frames appear below
+and **every number belongs to one of them** — they are not interchangeable, least
+of all the labels (`cut.score` runs 0 to 48 with no negatives; the curated score
+runs −9.05 to +6.21 and is 47.5% negative, agreeing with it in rank at ρ 0.945 on
+the 8,617 guides both contain). What the pivot re-opened, and what is closed
+again, is tabulated in Part 4 of the progress report.
+
+**Harness anchor (published frame):** XGBoost, top-300 features, 5 seeds × 5
+folds → R² 0.2937 ± 0.0015, Spearman 0.5278, Pearson 0.5424 on Noshay's 13,880
+guides — kept because reproducing it to four decimal places is how this pipeline
+is checked, not because it is the current baseline.
+
+**Working figure (curated frame):** base + family A, ρ **0.7218** on the curated
+five folds; **0.6985** on crisprHAL 2's own held-out partition against **0.6971**
+for their published model.
 
 **Against the state of the art: parity at a fraction of the cost.** On
 crisprHAL 2's **own two published splits**, evaluated against their own published
@@ -17,7 +33,7 @@ CNN–BiGRU on the same machine — **92×**, or **~150×** counted in CPU-secon
 (65.8 s per fold against ~10,000), which is the figure to lead with because they
 parallelise better than we do and wall-clock understates it. Comparable memory
 either way (3.76 GB against 4.55 GB peak), and ~190× with a LightGBM selector
-(`RESULTS.md` §15a).
+(`results/RESULTS_archive_2026-10-10.md` §15a).
 
 On **our own** curated five folds we lead by more — base + family A reach
 **0.7218** against their **0.7051** at their best known configuration, paired
@@ -52,7 +68,7 @@ a locally-trained model, and the reverse direction goes 0.478 → **0.628** once
 the flank features are added. Decomposed, it is the **long-range windows** that carry the crossing in both
 directions (+0.107 of the +0.150 going *C. rodentium* → *E. coli*) — so the
 gradient holds in both organisms even though *C. rodentium*'s own 236 kb screen
-is too narrow for a correlation to reveal it (`RESULTS.md` §15).
+is too narrow for a correlation to reveal it (`results/RESULTS_archive_2026-10-10.md` §15).
 
 **And where it stops.** Carried to Noshay et al.'s human matrix — 6,216 shared
 columns, so no change of representation — transfer is **−0.039
@@ -143,14 +159,22 @@ through the 20-mer. On the older 13,880-row cohort the comparable figure was nin
 families at ρ 0.641, +0.114 over the published baseline (random-row CV; the
 honest contiguous-arc figure for A + D2 + D1 is ρ 0.615).
 
-**Why six of the eight families could not have helped.** The published matrix
-turns out to be a *lossless* encoding of the 20 nt protospacer — every position
-carries at least three of its four mononucleotide indicators — so any feature
-that is a deterministic function of the guide adds **zero information**.
+**Why six of the eight families could not have helped much.** The published
+matrix turns out to be a *lossless* encoding of the 20 nt protospacer — every
+position carries at least three of its four mononucleotide indicators — so any
+feature that is a deterministic function of the guide adds **zero information**.
 Measured, by linear regression on position-specific k-mer indicators: CRISPRoff
 ΔG is 98% recoverable from the 20-mer, nearest-neighbour thermodynamics 85%.
-The families that delivered are exactly the ones that describe something
-*outside* the 20-mer. Three more measurements close off the alternatives — the
+
+**Zero information is not zero performance, and the distinction is the whole
+point.** Re-describing the guide in better coordinates is worth **+0.011 to
++0.019** ρ to a depth-limited tree, agreed across three guide-only families —
+small, real, and not nothing: Noshay's 316 quantum columns beat every k-mer
+encoding of the same 20 bases by **+0.0114**, and of the 63 hand-named summary
+columns the 46 computable from the guide carry **+0.0065** while the 17 that need
+annotation carry **−0.0007**. So the families sort by **reach**, not by a
+delivered/undelivered line: **nothing confined to the 20-mer clears +0.019, and
+nothing worth more than +0.05 is confined to it.** Three more measurements close off the alternatives — the
 champion has no feature left with residual correlation above 0.035, sixteen
 model classes span only 0.116 Spearman, and a CNN reading raw bases *ties* the
 engineered matrix on the guide (ρ 0.498 vs 0.527) while losing badly on the
@@ -159,7 +183,7 @@ flanks (+0.019 vs +0.080). Two independent screens of the same library agree at
 the constraint either. (The curated crisprHAL label we now train on has its own,
 higher ceiling of 0.946 — measured, not inherited; the two numbers belong to two
 different quantities and are not interchangeable.)
-`results/RESULTS.md` §13 has the full argument; `python -m sgrna.diagnose
+`results/RESULTS_archive_2026-10-10.md` §13 has the full argument; `python -m sgrna.diagnose
 --what all` reproduces it.
 
 **Model class, measured on identical folds and identical selected features.**
@@ -180,7 +204,7 @@ the signal is additive. On the interpretability side
 top features independently (ρ −0.02)** while LightGBM's agree (+0.44) at the
 same accuracy and 1.5× the selection stability. **The champion is therefore
 LightGBM**; the frozen XGBoost numbers above stay as the historical baseline.
-`results/RESULTS.md` §11–12 defines every metric and gives the full tables.
+`results/RESULTS_archive_2026-10-10.md` §11–12 defines every metric and gives the full tables.
 
 ---
 
@@ -189,7 +213,8 @@ LightGBM**; the frozen XGBoost numbers above stay as the historical baseline.
 | file | what it is for |
 |---|---|
 | [`docs/PROGRESS_REPORT.md`](docs/PROGRESS_REPORT.md) | **start here** — the whole project for an outside reader: the twelve findings and the evidence for each, how it compares to published work, what is original rather than imported, where it stops, and the controls in the appendices, with a glossary and a guide to reading the statistics |
-| [`results/RESULTS.md`](results/RESULTS.md) | every number and ablation from the first phase, with what each one means — **current to 10 October 2026**; anything after that date is in the progress report and the findings log, which are the live documents |
+| [`results/RESULTS.md`](results/RESULTS.md) | **claim → evidence index**: for every claim the report makes, the file that backs it and the command that produced it, including the thirteen files whose producer is no longer in the repo |
+| [`results/RESULTS_archive_2026-10-10.md`](results/RESULTS_archive_2026-10-10.md) | the long-form commentary as it stood on 10 October 2026, kept verbatim — nulls, tangents and all |
 | [`docs/FINDINGS_LOG.md`](docs/FINDINGS_LOG.md) | chronological record, including the claims later overturned |
 | [`docs/correspondence/`](docs/correspondence) | requests to and handoffs for teammates — what was asked, what came back, and what is left for whoever picks a thread up |
 | [`lit_review/beyond_QCT_literature_review.md`](lit_review/beyond_QCT_literature_review.md) | why each feature family was tried in the first place |
@@ -210,7 +235,7 @@ RSI09/
 ├── external_data/      downloaded datasets — see its own README
 ├── lit_review/         papers + the review that motivates each family
 ├── src/sgrna/          the pipeline (imported by the notebooks)
-├── results/            ablation tables + RESULTS.md (results *and* interpretation)
+├── results/            314 result files + RESULTS.md (claim → evidence index)
 ├── notebooks/          ← start here
 │   ├── RSI09_pipeline.ipynb    the full walkthrough, step by step
 │   └── RSI09_quickstart.ipynb  three cells, if you just want it running

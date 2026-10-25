@@ -23,9 +23,19 @@ the cleavage step rather than to Cas9 binding (it disappears in a dCas9 CRISPRi
 screen). [`Runjia/PROGRESS_REPORT.md`](Runjia/PROGRESS_REPORT.md) is the full
 write-up, including the ten claims withdrawn on the way to these.
 
-Predicting sgRNA cutting efficiency (`cut.score`) in *E. coli* CRISPR-Cas9
-screens, extending the quantum chemical tensor (QCT) feature set of
+Predicting sgRNA cutting efficiency in *E. coli* CRISPR-Cas9 screens, extending
+the quantum chemical tensor (QCT) feature set of
 [Noshay et al. 2023, NAR 51:10147](https://doi.org/10.1093/nar/gkad736).
+
+**Note on which data the numbers refer to.** The project pivoted on 13 October
+2026 from Noshay's published 13,880-row matrix and its `cut.score` label to
+crisprHAL 2's **curated 33,567-guide** release of the same Guo screen and its
+ALDEx2 score, with **crisprHAL 2 as the baseline to beat** rather than Noshay's
+iRF. The two labels agree in rank (ρ 0.945 on the 8,617 guides both contain) but
+are different quantities, so any figure in this repo belongs to one frame or the
+other. The shared baseline script below is still the harness check — reproducing
+its five-seed CV to four decimal places is how a pipeline change is validated —
+but it is no longer the comparator.
 
 ## Where to start
 

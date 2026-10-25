@@ -43,7 +43,9 @@ families that did not work, what curation actually is, and the family table on
 the curated cohort; **C0/C** reproducibility and data sources; **D** references;
 **E** withdrawn claims. Null results that are null for unrelated reasons are in
 B2 and B3 rather than in Part 1, because a list of things that did not work is
-not a finding. Protocols and per-fold numbers are in `../results/RESULTS.md`;
+not a finding. `../results/RESULTS.md` indexes every claim here to the file
+that backs it and the command that produced it; per-fold numbers and the
+long-form commentary to 10 October are in `../results/` beside it;
 the chronological record is `FINDINGS_LOG.md`.
 
 ---
@@ -393,17 +395,42 @@ each width, which is a weaker objection than it was before this was read.
 
 ### 5. The effect belongs to the DNA, and transfers
 
-| test | result |
-|---|---|
-| different enzyme (WT-SpCas9 → TevSpCas9) | ρ 0.700 against 0.825 for a locally-trained model |
-| different organism (*E. coli* → *C. rodentium*) | 0.701 [0.683, 0.704]; reverse 0.627 [0.617, 0.636] |
-| different kingdom (bacteria ↔ human) | **no transfer either way** — ρ −0.039 [−0.054, −0.024] into human, −0.006 [−0.023, +0.011] back, with the human model fitted to the human matrix |
-| read-depth / mappability artefact? | survives a high-uniqueness stratum, +0.078 → +0.051 |
-| gene ranking in disguise? | within-gene ρ 0.571 against 0.606 global; flanks worth **+0.061 inside genes** |
-| **a property of cutting, or of Cas9 binding?** | **cutting.** In a dCas9 CRISPRi screen family A adds **−0.009**, against **+0.157** on the cutting screen under the same gene-grouped protocol |
+**Transfer, stated as one variable at a time.** Each row trains SLICER on one
+screen and predicts another without retraining or recalibration. *Transferred* is
+what the imported model scores on the target; *local* is the same architecture
+trained on the target itself, which is the ceiling a transfer could reach;
+*retained* is the ratio. The last column is how much of the transferred ρ the
+flank features are responsible for — the difference between the base alone and
+base + family A, both transferred (`results/transfer_model.csv`,
+`results/transfer.csv`, 3 seeds).
 
-*Why these five and not other tests.* Each removes one way the effect could be
-an artefact of this dataset rather than a property of the DNA. A new **enzyme**
+| variable changed | from → to | transferred ρ | local ρ | retained | of which family A |
+|---|---|---:|---:|---:|---:|
+| **nuclease** | SpCas9 → eSpCas9, same genome | 0.689 | 0.784 | **88%** | +0.098 |
+| **nuclease + organism** | *E. coli* SpCas9 → *C. rodentium* TevSpCas9 | 0.698 | 0.766 | **91%** | +0.072 |
+| **the same, reversed** | *C. rodentium* TevSpCas9 → *E. coli* SpCas9 | 0.628 | 0.708 | **89%** | **+0.150** |
+| **kingdom** | *E. coli* → human (6,216 shared columns) | −0.039 | 0.508 | **0%** | — |
+| **the assay** | Cas9 cleavage → dCas9 silencing, zero-shot | 0.061 | 0.458 | **13%** | — |
+
+**Changing the enzyme or the organism costs about a tenth of the performance;
+changing the kingdom or the assay costs all of it.** The three bacterial rows
+retain 88–91% with no retraining at all, and in the hardest of them — importing a
+model from a 236 kb *C. rodentium* screen into the *E. coli* genome — the flank
+features carry **+0.150 of the 0.628**, nearly a quarter of everything that
+arrives. That is the sense in which the effect "belongs to the DNA": it is the
+part of the model that survives changing the protein and the host.
+
+**Three confound controls, which are not transfer tests and answer a different
+question:**
+
+| could the effect be an artefact of... | result |
+|---|---|
+| read depth or mappability? | no — survives a high-uniqueness stratum, +0.078 → +0.051 |
+| gene ranking in disguise? | no — within-gene ρ 0.571 against 0.606 global; flanks worth **+0.061 inside genes** |
+| **Cas9 binding rather than cutting?** | **cutting.** In a dCas9 CRISPRi screen family A adds **−0.009**, against **+0.157** on the cutting screen under the same gene-grouped protocol |
+
+*Why these tests and not others.* Each removes one way the effect could be an
+artefact of this dataset rather than a property of the DNA. A new **nuclease**
 changes the protein but keeps the genome, so a surviving effect is not about
 SpCas9's idiosyncrasies. A new **organism** changes the genome too, so a
 surviving effect is not about *E. coli*'s composition; the **human** arm
@@ -412,8 +439,8 @@ would be evidence of a methodological artefact rather than of biology. The
 **uniqueness stratum** removes the mappability explanation by restricting to
 guides whose reads cannot be misassigned. The **within-gene** comparison removes
 the gene-ranking explanation by asking the question entirely inside genes, where
-"which gene" is constant. Nothing here is an intervention, so all five together
-still only rule things out.
+"which gene" is constant. Nothing here is an intervention, so together they still
+only rule things out.
 
 **The one test that could have falsified the mechanism, and it did not.**
 Finding 3's account is a duplex-opening step limited by local DNA composition at
@@ -489,6 +516,36 @@ but it is **not monotone** (the top stratum rises again), and it covaries with
 headroom — the GC-poor stratum has the lowest baseline and so the most room to
 gain. So the ordering is an observation, not a dose-response curve, and it should
 not be read as quantitative support for the duplex-opening account.
+
+**Does cleavage-specificity make the predictor useless for real editing work?**
+It is the first thing to ask after the dCas9 result, and the answer turns on
+separating the assay's *readout* from the quantity being predicted. In these
+pooled screens a guide's score falls because the cell died, and the cell died
+because Cas9 cut the chromosome — so death is the **readout for cutting
+efficiency**, not the thing anyone wants. The predicted quantity is "how
+efficiently is this target cleaved", which is exactly what a genome-editing
+experiment needs to maximise.
+
+So the scope is narrower than "CRISPR" and wider than "killing bacteria":
+
+| application | does this predictor apply? |
+|---|---|
+| gene knockout, HDR knock-in, any edit that needs a double-strand break | **yes** — this is the quantity being predicted |
+| pooled knockout screens using Cas9 cutting as the perturbation | **yes**, and these are the screens it was fitted on |
+| CRISPRi / CRISPRa with dCas9 | **no** — measured, −0.009, and a guide-sequence model is the right tool there |
+| base and prime editing (nickase-based) | **untested**, and genuinely uncertain — these bind and nick rather than cut, which puts them between the two cases |
+
+**The dCas9 null is therefore a specification, not a defect**: it says which
+library a user should and should not apply this to, and it is the reason the
+flank columns are worth building at all — a feature set that helped equally in
+both assays would be describing accessibility, which is already well covered. The
+one honest gap is the nickase row: nothing here speaks to base or prime editors,
+and the Cui result makes it a real question rather than a safe extrapolation.
+
+For anyone whose application *is* silencing, the comparison in Finding 12 is the
+practical guidance: crisprHAL 2's raw-sequence model transfers to a CRISPRi
+screen about half again as well as ours (\|ρ\| 0.087 against 0.061), because what
+survives that change of assay is guide-sequence effects and not flanking DNA.
 
 ### 6. The long-range asymmetry depends on orientation — and it is transcription-start-site orientation, not nearest-gene
 
@@ -743,6 +800,60 @@ goes +0.0133 at 26,853 to +0.0021 at 47,591. **So the data-efficiency claim
 survives and the ranking claim does not.** "SLICER beats crisprHAL 2" is a claim
 about the small-data regime; at 47.6k labelled guides it is false.
 
+**Hold the architecture fixed and change only the training data, and parity turns
+out to be bought with rows.** The comparison above varies the condition; this one
+varies the *data* and nothing else. Same champion XGBoost, same 6,517 columns,
+same 300-column budget, selection fitted inside the training rows — scored every
+time on crisprHAL 2's **own held-out WT-SpCas9 test partition** (6,737 of their
+6,748 guides locate in our feature build; their published model scores 0.6971 on
+it). `data_ablation.py`, `results/data_ablation.csv`:
+
+| training data | n | ρ | against crisprHAL 2 |
+|---|---:|---:|---:|
+| all curated rows, **base only** (no family A) | 26,830 | 0.5431 | −0.154 |
+| Noshay's 1,222-gene panel, **Noshay's own `cut_score`** | 6,860 | 0.6537 | −0.043 |
+| the same rows, curated label | 6,860 | 0.6600 | −0.037 |
+| random curated rows, count matched (3 draws) | 6,860 | 0.6683 | −0.029 |
+| **all curated rows** | **26,830** | **0.6985** | **+0.0014** |
+
+Read down the middle three rows and the move from "the data Noshay published" to
+"the data crisprHAL published" decomposes: the **label** is worth **+0.0063**,
+**which rows** another **+0.0083**, and **how many rows** the remaining
+**+0.0302** — two thirds of the total is simply row count. **On Noshay's data
+alone this architecture would sit 0.043 behind the state of the art.** Parity is
+not a property of the model by itself.
+
+Two things follow that are worth keeping apart. First, the **feature set still
+dominates every data effect**: family A is worth **+0.1554** on this same held-out
+partition at full data, against +0.0448 for the entire move between cohorts. The
+ordering of the contributions is features, then row count, then which rows, then
+the label — and the label is the part the curation paper is about. Second, this is
+a **within-SLICER** ablation and says nothing about how crisprHAL 2 would fare on
+Noshay's rows; their model was trained on the full curated training set, so only
+the last row is a like-for-like comparison. What the sample-complexity curves add
+is that their model degrades *faster* as labels get scarce (Appendix B), so the
+small-data rows here are, if anything, generous to them.
+
+**On model size there is no common unit, so both are reported.** A CNN is quoted
+by its trainable parameter count; crisprHAL 2's WT-SpCas9 model holds **790,533**
+of them across 37 layers (823,301 for eSpCas9). A boosted ensemble has no weight
+matrices, and the closest analogue is what the fit stores: **6,348 leaf values**
+over 400 trees, or **18,244 numbers** counting each internal node's feature index
+and threshold (`complexity.py`). That is **125×** fewer fitted values, or 43× on
+the inclusive count — the same order as the compute ratio, which is not a
+coincidence.
+
+Three numbers say more about interpretability than any of those totals, and have
+no CNN equivalent. **`max_depth = 4` caps the interaction order at four**: a
+structural guarantee that no term in the model combines five features, rather than
+an empirical observation. **280 of the 300 offered columns are ever split on, 45
+carry half the total gain, and the top ten carry 19.5%** — so the fitted function
+is spread over tens of named quantities rather than concentrated in a few or
+diffused over thousands. And a **ridge on a decorrelated basis reproduces 95.6% of
+its ρ** (Appendix B), which is the strongest statement available: the model is
+close to a sum of one-dimensional effects in interpretable units, and that is why
+the account in Findings 3 and 4 can be read off it at all.
+
 **And on a screen neither model trained on, their raw-sequence model transfers
 better than our engineered one** — \|ρ\| 0.0867 against 0.0609 zero-shot on Cui's
 CRISPRi screen, a paired difference of **−0.0258, 95% CI [−0.0289, −0.0227]**
@@ -814,6 +925,78 @@ against 0.6799), and SLICER leads by **0.065** only once the window reaches
 about architecture, and Finding 12 tabulates every condition under which the
 comparison has been asked rather than choosing one.
 
+### What is new about the biology, separately from the model
+
+The three contributions above are partly about modelling. Stripped of everything
+computational, this is what the project claims about *E. coli* Cas9 biology that
+was not known before it — one positive localisation, one directional effect, and
+a set of constraints that are worth as much because each kills a plausible
+mechanism.
+
+**Positive.**
+
+1. **The DNA outside the protospacer — DNA Cas9 never contacts — predicts whether
+   a target is cut**, and it is the largest known effect for this phenotype:
+   +0.164 ρ, out to roughly 500 nt each side. Browne et al. had shown that a
+   network reading ±190 nt beats one reading the guide; the claim here is
+   stronger and different in kind — the information is **compositional and
+   smoothly distributed**, with a measured autocorrelation length (8% of the
+   effect survives a 1 kb shift, none survives 10 kb) and no dependence on where
+   the window edges are put (+0.1634 against +0.1638 at four different widths).
+   There is no motif to find.
+2. **The effect belongs to the cleavage step, not to binding or accessibility.**
+   In a dCas9 CRISPRi screen on the same genome the same features add −0.009
+   against +0.157 on a cutting screen. Binding-limited and chromatin-limited
+   accounts both predict a flank effect and both are excluded. This is the one
+   result here that localises a mechanism rather than bounding one.
+3. **It is a local property of the target, not a property of its gene.** Asked
+   entirely inside genes, where gene identity is constant, the flanks are still
+   worth **+0.061**, and the whole effect survives holding out whole genes.
+
+**Directional.**
+
+4. **Orientation relative to transcription matters**, by Δ **0.051**
+   [0.020, 0.082] against a curated RegulonDB TSS — so the surrounding DNA is not
+   acting through composition alone. Something with a direction is involved
+   (transcription, replication, or the supercoiling domains they create), and
+   which one is unidentified. This is the most mechanistically suggestive loose
+   end in the project.
+
+**Constraints — each rules out a mechanism that would otherwise be the obvious
+candidate.**
+
+5. **Not helical phasing or intrinsic curvature.** GC skew, A-tract phasing and
+   bendability periodicity at the helical repeat — the most mechanistically
+   motivated features buildable from the genome — are a null: −0.001 alone,
+   +0.0004 on top of the flank composition.
+6. **Not the physical shape of the flanks, but their letter composition.**
+   Flank DNA-shape descriptors are worth +0.120 alone and **+0.0007** once
+   composition is present: a reparameterisation, not a second channel.
+7. **Not supercoiling**, despite the family built to test it paying +0.139: the
+   untagged no-antibody GapR control predicts as well as the ChIP, so what that
+   family measures is sequencing read density. Guo et al.'s "unknown chromosomal
+   factors" are, in this family, coverage.
+8. **Not gene essentiality — exactly as Guo et al. reported — but expression is
+   not null either.** The transcription family's +0.058 is gene geometry
+   (+0.0393) plus expression (+0.0213) plus essentiality (+0.00004). The
+   published essentiality null reproduces to four decimal places; the published
+   expression null does not.
+9. **Not a restatement of target GC.** Conditioning on target GC *raises* flank
+   GC's association, +0.044 marginal to +0.082 partial, and the flank effect is
+   positive inside all five target-GC strata.
+10. **And the phenotype is mostly still unexplained.** The label's reliability
+    ceiling is **0.946** and the best model here reaches 0.7218, so about **0.22 ρ
+    of real, repeatable biology is unaccounted for** by every feature family
+    tried. That number is the most useful thing in this list for anyone deciding
+    what to work on next.
+
+**One cross-kingdom observation**, which is biology rather than bookkeeping: the
+association between GC content and cutting efficiency **inverts** between
+*E. coli* and human (−0.20 against +0.02), and the human phenotype is far less
+additive — a linear model reproduces 96% of a boosted tree's ρ in *E. coli* and
+only 64% in human. Bacterial cutting efficiency is close to a sum of small
+independent effects; human cutting efficiency is not.
+
 Findings 7–11 support these three. They are not co-equal headlines, with one
 exception worth separating for an ML audience: **Findings 9 and 10 are
 methodological results about interpretability that generalise beyond this
@@ -861,6 +1044,19 @@ compressed into a biology paper.
   overlapping guides and give target GC the same sign (−0.147 against −0.201), so
   nothing downstream reverses — but **every number in this report belongs to one
   label or the other and they are not interchangeable.**
+- **And "curated" is a procedure, not a judgement — but it is a *fitted*
+  procedure.** The guides were not cherry-picked: the score is ALDEx2's
+  `diff.btw`, the posterior-mean log2 fold change between the Cas9 and
+  dead-nuclease arms over two replicates each, and the filter is an average
+  control-condition read count with a cutoff of **73** for the SpCas9 set we
+  train on (31 for eSpCas9, 56 for *C. rodentium*). Two properties of it are not
+  flattering and we state them because we train on its output: the **threshold is
+  itself chosen by cross-validation for model performance**, so it is a
+  hyperparameter rather than an independent cleanliness rule; and it is applied
+  **before** the train/test split, so it cleans the test set too and raises ρ
+  partly by making the evaluation easier. **None of this is what inflated our
+  family table**: at fixed rows a label swap is worth +0.004, and the 3.3× came
+  from the cohort being a different, larger, more variable draw (Appendix B2a).
 - **The long-range mechanism is unidentified.** Orientation is a live candidate
   with one ruled-out alternative; the most mechanistically motivated feature built
   to explain it (GC skew and helical periodicity) is a null.
@@ -880,7 +1076,7 @@ Part 1 now that it is settled. The freeze matters to it in one way worth stating
 here: **eSpCas9 was designated "the untouched final evaluation" and was not
 untouched** — four feature arms had already been run on it across three seeds and
 two CV schemes (`results/transfer.csv`), with a flank gain of **+0.104 under
-`arc5`** quoted in `RESULTS.md`. Nothing was ever *selected* on it, so it is
+`arc5`** quoted in `RESULTS.md` (now `RESULTS_archive_2026-10-10.md`). Nothing was ever *selected* on it, so it is
 confirmatory rather than contaminated, but "evaluated once" was never
 available, and the last genuinely unused dataset (Cui's CRISPRi screen) has now
 been spent too. **No untouched external set remains.**

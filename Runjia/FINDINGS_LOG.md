@@ -4437,3 +4437,83 @@ Worth noting how this one was caught: not by re-reading the claim, but by
 chasing down a teammate's unexplained number. Reproducing ρ 0.472 showed the
 human model was the wrong shape for its data, and the transfer interval turned
 out to be resting on exactly that.
+
+---
+
+## 25 October 2026 — the architecture held fixed, the data varied; and four questions answered
+
+### Parity is bought with rows, and the features still dominate
+
+`data_ablation.py`. Same champion XGBoost, same 6,517 columns, same 300-column
+budget, selection inside the training rows — every arm scored on crisprHAL 2's
+**own held-out WT-SpCas9 partition** (6,737 of their 6,748 guides locate in our
+build; their published model scores 0.6971 on it):
+
+| training data | n | ρ | vs crisprHAL 2 |
+|---|---:|---:|---:|
+| all curated rows, base only | 26,830 | 0.5431 | −0.154 |
+| Noshay's panel, Noshay's `cut_score` | 6,860 | 0.6537 | −0.043 |
+| the same rows, curated label | 6,860 | 0.6600 | −0.037 |
+| random curated rows, matched n (3 draws) | 6,860 | 0.6683 | −0.029 |
+| all curated rows | 26,830 | 0.6985 | **+0.0014** |
+
+Decomposing the move from Noshay's data to crisprHAL's: **label +0.0063, which
+rows +0.0083, how many rows +0.0302.** Two thirds is row count. On Noshay's data
+alone this architecture sits **0.043 behind** the state of the art — so parity is
+not a property of the model. Against that, family A is worth **+0.1554** on the
+same partition, 3.5× the entire cohort move: the ordering of contributions is
+features, row count, which rows, then the label.
+
+### A complexity measure comparable to a parameter count
+
+`complexity.py`. crisprHAL 2's WT-SpCas9 model: **790,533** trainable parameters,
+37 layers. SLICER stores **6,348 leaf values** over 400 trees, or **18,244**
+numbers including each internal node's feature index and threshold — **125×** or
+43× fewer, the same order as the compute ratio. Three numbers with no CNN
+equivalent: `max_depth=4` caps interaction order at four by construction; 280 of
+300 offered columns are ever split on, 45 carry half the gain, top ten carry
+19.5%; and ridge reproduces 95.6% of ρ on a decorrelated basis, so the fitted
+function is close to a sum of one-dimensional effects in named units.
+
+### Four write-ups, no new runs
+
+* **The transfer claim restated one variable at a time** (Finding 5): nuclease
+  88% retained, nuclease + organism 91%, reversed 89%, kingdom 0%, assay 13% —
+  with the locally-trained ceiling and family A's share of each transferred ρ.
+  Changing the protein or the host costs a tenth; changing the kingdom or the
+  assay costs everything.
+* **Whether cleavage-specificity makes the predictor useless** (Finding 5): no —
+  death is the *readout* for cutting efficiency, not the goal. Applies to
+  knockouts, HDR and Cas9 pooled screens; does not apply to CRISPRi/CRISPRa
+  (measured, −0.009); **untested and genuinely uncertain for base and prime
+  editors**, which nick rather than cut. The dCas9 null is a specification of
+  scope, not a defect.
+* **The biology, separately from the model** (Part 2): one positive localisation
+  (cleavage step), one directional effect (TSS orientation, Δ0.051), seven
+  constraints that each kill a candidate mechanism (not phasing, not shape, not
+  supercoiling, not essentiality, not target GC), and the number worth carrying
+  forward — **0.22 ρ of repeatable biology is still unexplained**, since the
+  label's ceiling is 0.946 and the best model here reaches 0.7218.
+* **What curation is** was already answered in Appendix B2a and is now pointed to
+  from the places that need it: rule-based, not cherry-picked — an ALDEx2
+  `diff.btw` posterior mean plus an average control-read-count filter at 73 — but
+  with two unflattering properties, that the threshold is itself cross-validated
+  and that it is applied **before** the split. And the inflation is not curation:
+  at fixed rows the label swap is worth **+0.004**.
+
+### RESULTS.md rebuilt as a claim → evidence index
+
+2,100 lines of commentary → **131 lines** mapping every report claim to the file
+that backs it and the command that produced it. Nulls stay when the null *is* the
+claim. The old file is kept verbatim as `RESULTS_archive_2026-10-10.md`.
+
+The audit it forced is the useful part: **thirteen cited files have no producer in
+`src/` or `colab/`** — `selector_control.csv`, `dissection_supercoiling.csv`,
+`abund_local_vs_mappability.csv`, `additivity_reduced.csv`,
+`grouped_retention.csv`, `kmer_order_noselect.csv`, `portability_364.csv`,
+`their_split_slicer.csv`, `seqnet_matched.csv`, `d_mechanics_reconstructibility.csv`,
+`final_eval_metric_bootstrap.csv`, and the two Colab search files transcribed
+from a log. Each is a *secondary* file for its row, so no claim rests on one
+alone — but this is exactly the gap `human_transfer.csv` had, and closing that one
+cost a claim. Flagged in RESULTS.md with a note that anything a paper leans on
+should be re-derived from a committed command first.
