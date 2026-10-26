@@ -30,7 +30,7 @@ from collections import defaultdict
 
 ROOT = pathlib.Path("/Users/runjia/Claude/Projects/RSI09")
 RES = ROOT / "results"
-DOCS = [ROOT / "docs/PROGRESS_REPORT.md", ROOT / "docs/FINDINGS_LOG.md",
+DOCS = [ROOT / "docs/PROGRESS_REPORT.md",
         ROOT / "README.md", RES / "RESULTS.md", ROOT / "RSI-Crispr/README.md",
         *sorted((ROOT / "docs/correspondence").glob("*.md"))]
 

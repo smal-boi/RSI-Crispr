@@ -166,9 +166,8 @@ reparameterisation of their letter composition rather than new information.
 Two findings that change how these read: the `d_supercoiling` gain is **DNA
 read density, not supercoiling** (the untagged no-antibody control predicts as
 well as the ChIP), and the positional families are **one variable measured
-three ways**. [`results/RESULTS.md`](results/RESULTS.md) has the evidence;
-[`docs/FINDINGS_LOG.md`](docs/FINDINGS_LOG.md) is the running record of every
-finding in date order.
+three ways**. [`results/RESULTS.md`](results/RESULTS.md) has the evidence, and the shared
+repository's git history is the record of what was believed when.
 
 **The 13,880-row cap is lifted.** 5,853 of the 5,887 opaque `V####` columns
 were identified as (position, k-mer) indicators (100% verification), so with
@@ -256,7 +255,6 @@ LightGBM**; the frozen XGBoost numbers above stay as the historical baseline.
 | [`docs/PROGRESS_REPORT.md`](docs/PROGRESS_REPORT.md) | **start here** — the whole project for an outside reader: the twelve findings and the evidence for each, how it compares to published work, what is original rather than imported, where it stops, and the controls in the appendices, with a glossary and a guide to reading the statistics |
 | [`results/RESULTS.md`](results/RESULTS.md) | **claim → evidence index**: for every claim the report makes, the file that backs it and the command that produced it, including the thirteen files whose producer is no longer in the repo |
 | [`results/RESULTS_archive_2026-10-10.md`](results/RESULTS_archive_2026-10-10.md) | the long-form commentary as it stood on 10 October 2026, kept verbatim — nulls, tangents and all |
-| [`docs/FINDINGS_LOG.md`](docs/FINDINGS_LOG.md) | chronological record, including the claims later overturned |
 | [`docs/correspondence/`](docs/correspondence) | requests to and handoffs for teammates — what was asked, what came back, and what is left for whoever picks a thread up |
 | [`lit_review/beyond_QCT_literature_review.md`](lit_review/beyond_QCT_literature_review.md) | why each feature family was tried in the first place |
 | `local/MISCONCEPTIONS.md` | *(local only, gitignored)* every claim we withdrew, why it was wrong and how it was caught |
@@ -280,7 +278,7 @@ RSI09/
 ├── notebooks/          ← start here
 │   ├── RSI09_pipeline.ipynb    the full walkthrough, step by step
 │   └── RSI09_quickstart.ipynb  three cells, if you just want it running
-├── docs/               PROGRESS_REPORT.md, FINDINGS_LOG.md, correspondence/, proposal
+├── docs/               PROGRESS_REPORT.md, qna_archive.md (local), correspondence/
 ├── colab/              scripts that need a GPU — run on free Colab, not here
 ├── archive/            earlier one-off scripts, kept for reference
 └── RSI-Crispr/         the team's shared git repo — `Runjia/` is a synced copy

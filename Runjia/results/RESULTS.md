@@ -6,7 +6,7 @@ number in the report can be checked without reading the report.
 
 The narrative lives in [`../docs/PROGRESS_REPORT.md`](../docs/PROGRESS_REPORT.md);
 the chronology, including claims later withdrawn, lives in
-[`../docs/FINDINGS_LOG.md`](../docs/FINDINGS_LOG.md).
+the shared repository's git history.
 
 **What is indexed:** results a claim rests on. That includes nulls when the null
 *is* the claim — the dCas9 screen, the periodicity family, the shift control —
