@@ -4732,3 +4732,54 @@ The seqnet re-derivation before it took ~2.3 h, consistent with its own per-fold
 timings (111 s at flank 100 rising to ~900 s at 1,000, twenty folds). Total
 compute was about three hours, finishing at 01:56; the long wall-clock in the
 session came from polling, not from the jobs.
+
+---
+
+## 26 October 2026 — every number in the documents checked against the files
+
+Two layers, now committed as `src/sgrna/numcheck.py` so it can be re-run before
+submission. **Coverage**: does this figure exist anywhere in `results/`?
+**Attribution**: when a line cites a file, do that line's numbers appear in
+*that* file? Matching is rounding-aware, and each cited file contributes its
+literals, every pairwise difference of them, and every ratio — a report whose
+claims are mostly Δρ cannot be checked by a literal match. 827,614 numeric
+literals across 314 result files; four documents scanned.
+
+The first pass flagged 66 coverage and 95 attribution misses, almost all of them
+differences the checker could not yet see. With differences and ratios included:
+**21 coverage and 17 attribution flags**, of which three were real.
+
+**Three errors found and fixed:**
+
+1. **Off-by-one guide counts.** Their shipped test files have **6,749** (SpCas9)
+   and **11,898** (eSpCas9) rows, not 6,748 and 11,897. The files are headerless,
+   and both figures came from subtracting a header that is not there — the same
+   slip I made at the keyboard earlier this week. The report already said 11,898
+   in one place and 11,897 in another, so it was internally inconsistent too.
+   Fixed in the report, `final_eval.py` and `data_ablation.py`.
+2. **A mis-citation.** The reduced-representation row cited
+   `additivity_reduced.csv` for −0.0118 / −0.0143; those numbers live in
+   `curated_ladder.csv`. Re-pointed.
+3. **A rounding slip.** "364 + family A lose 0.0142" is **0.0143**
+   (0.707922 − 0.693661 = 0.014261). Three occurrences corrected. It changes
+   nothing — both readings are 2–3× the 0.005 margin — but it was wrong.
+
+**And one near-miss worth recording.** The orientation result, Δ 0.051
+[0.020, 0.082], was cited to `asymmetry_strand_audit.csv`, which is a
+guide-count audit and contains no Δρ at all. The number is sound — it is the
+`tss` row of
+`Jacky/orientation-controls/results/intergenic_orientation_controls_delta_ci.csv`
+(delta 0.050748, lo 0.020160, hi 0.082202) — but for a week the report pointed at
+a file that could not support it, which is how the `human_transfer.csv` gap
+started. Citation corrected to the real source.
+
+**Structural counts verified against the raw data rather than against results**
+(they are properties of the inputs, so `results/` is the wrong place to look for
+them): the published matrix has 6,234 columns of which **5,887** are `V`-prefixed
+and 6,232 are features; **13,877** of 13,880 guides are single-copy; the human
+matrix has 6,235 columns, 6,233 of them features. All three match the text.
+
+The remaining flags are figures the checker cannot compute — means over folds or
+draws (0.6987, 0.4785, 0.5247), a teammate's quoted 0.472, and counts derived by
+arithmetic from verified ones (6,095 = 6,232 − 74 − 63). Re-run
+`python -m sgrna.numcheck` after any edit; the flag list should stay at these.

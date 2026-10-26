@@ -46,7 +46,7 @@ marked **[P]** published or **[C]** curated. They are not interchangeable.
 |---|---|---|---|---|
 | 99% of the 6,232 published columns regenerate from a 20-mer | 5,853 of 5,887 `V` columns decoded | [P] | `portability_audit.csv` | `python -m sgrna.expand --build` |
 | 412 columns computable from any guide match all 6,232 | 0.00003 ρ | [P] | `portability.csv`, `portability_364.csv` | `python -m sgrna.portability`; `python -m sgrna.rederive --only portability_364` |
-| …but no reduced set is non-inferior on the curated cohort | −0.0118 / −0.0142 | [C] | `additivity_reduced.csv` | `python -m sgrna.rederive --only additivity_reduced` |
+| …but no reduced set is non-inferior on the curated cohort | −0.0118 / −0.0143 | [C] | `curated_ladder.csv` | `python -m sgrna.curated_ladder --no-select` |
 | A deterministic function of the guide adds no information, but does add performance | +0.011 to +0.019 | [C] | `no_information.csv`, `base_enrichment.csv` | `python -m sgrna.no_information`, `python -m sgrna.base_enrichment` |
 | Noshay's quantum columns beat every k-mer encoding of the same bases | +0.0114 | [C] | `curated_ladder.csv` | `python -m sgrna.curated_ladder` |
 | Of the 63 hand-named columns, the computable 46 carry the gain | +0.0065 vs −0.0007 | [C] | `handnamed_split.csv` | `python -m sgrna.handnamed_split` |
@@ -60,7 +60,7 @@ marked **[P]** published or **[C]** curated. They are not interchangeable.
 | claim | number | frame | evidence | command |
 |---|---|---|---|---|
 | **The effect is specific to cleavage, not Cas9 binding** | −0.009 vs +0.157 | Cui | `cui_screen.csv` | `python -m sgrna.cui_screen` |
-| Orientation to the nearest TSS matters | Δ 0.051 [0.020, 0.082] | [P] | `asymmetry_strand_audit.csv` | `python -m sgrna.asymmetry`; the TSS control is Jacky's |
+| Orientation to the nearest TSS matters | Δ 0.051 [0.020, 0.082] | [P] | `../../RSI-Crispr/Jacky/orientation-controls/results/intergenic_orientation_controls_delta_ci.csv` (row `tss`); our strand audit is `asymmetry_strand_audit.csv` | Jacky's orientation controls |
 | Not helical phasing: GC skew and periodicity are null | −0.001 alone, +0.0004 on A | [P] | `ablation_jper.csv`, `ablation_jper_joint.csv` | `python -m sgrna.run_ablation --families j_periodicity --tag jper` |
 | Not flank shape: shape is a reparameterisation of composition | +0.0007 on top of A | [P] | `ablation_shape_joint.csv`, `cross_redundancy_*.csv` | `python -m sgrna.run_ablation --families i_shape --tag shape_joint` |
 | Not supercoiling: the no-antibody control predicts as well | control ≈ ChIP | [P] | `dissection_supercoiling.csv` | `python -m sgrna.rederive --only dissection_supercoiling` |

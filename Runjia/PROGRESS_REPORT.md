@@ -161,7 +161,7 @@ compared in full rather than candidate pools under a budget:
 | + trimer | 1,510 | 0.5354 ± 0.0003 | −0.0096 |
 | + tetramer (**all k-mers**) | 5,853 | 0.5335 ± 0.0013 | −0.0114 |
 | **regenerated base** (+ 316 quantum columns) | **6,169** | **0.5449 ± 0.0013** | — |
-| 364 + family A | 712 | 0.6937 ± 0.0010 | −0.0142 |
+| 364 + family A | 712 | 0.6937 ± 0.0010 | −0.0143 |
 | 1,510 + family A | 1,858 | 0.7011 ± 0.0009 | −0.0068 |
 | all k-mers + family A | 6,201 | 0.7005 ± 0.0004 | −0.0074 |
 | base + family A | 6,517 | **0.7079 ± 0.0004** | — |
@@ -176,7 +176,7 @@ row in Part 4.
 
 *But no reduced representation we tested is non-inferior here.* 364 columns lose
 **0.0118**, 1,510 lose **0.0096**, and with family A present the shortfalls are
-0.0142 and 0.0068 — every one of them past the pre-declared 0.005 ρ margin that
+0.0143 and 0.0068 — every one of them past the pre-declared 0.005 ρ margin that
 427 passed on the published matrix. So **"412 ≈ all 6,232" is a statement about
 the published matrix under a 300-column budget** and does not transfer; on this
 cohort the full regenerated base earns its 6,169 columns. What *does* transfer is
@@ -791,7 +791,7 @@ upper bound, now one with a measurement behind it rather than only a caveat
 
 **On crisprHAL 2's own two splits, evaluated against their own published
 weights, it is parity — and parity as a measured equivalence rather than as a
-failure to find a difference.** Run once on their 11,897-guide eSpCas9 test file
+failure to find a difference.** Run once on their 11,898-guide eSpCas9 test file
 (`final_eval.py`):
 
 | | ρ | τ | Pearson | R² | top-decile | pick %ile |
@@ -854,7 +854,7 @@ out to be bought with rows.** The comparison above varies the condition; this on
 varies the *data* and nothing else. Same champion XGBoost, same 6,517 columns,
 same 300-column budget, selection fitted inside the training rows — scored every
 time on crisprHAL 2's **own held-out WT-SpCas9 test partition** (6,737 of their
-6,748 guides locate in our feature build; Browne et al. report **0.695** on it,
+6,749 guides locate in our feature build; Browne et al. report **0.695** on it,
 and their shipped weights re-run here give 0.6940). `data_ablation.py`,
 `results/data_ablation.csv`:
 
@@ -1392,7 +1392,7 @@ settled under those constraints and is **not** automatically valid on crisprHAL'
 
 | decision | made under | why it may differ now |
 |---|---|---|
-| **the 412/427-column reduced set** | non-inferiority on the *published* matrix and label | **closed, and the answer is no.** With no selection on the curated cohort, 364 columns lose 0.0118 and 364 + family A lose 0.0142 — 2–3× the 0.005 margin. Non-inferiority was a published-matrix result under a 300-column budget (Finding 2) |
+| **the 412/427-column reduced set** | non-inferiority on the *published* matrix and label | **closed, and the answer is no.** With no selection on the curated cohort, 364 columns lose 0.0118 and 364 + family A lose 0.0143 — 2–3× the 0.005 margin. Non-inferiority was a published-matrix result under a 300-column budget (Finding 2) |
 | **the published Δρ levels** | Noshay's 13,880 rows | **explained with a mechanism.** The relationship itself is steeper in the added rows — β for flank GC against the score is **2.96× larger**, against only 1.21× more predictor spread and 1.34× more label spread, which works the other way. Split by host gene, the weakness belongs to Noshay's **1,222-gene panel** (β +5.4 inside it, +17.0 outside), not to which guides he published in it. The published matrix measured a real effect in a part of the genome where it is weak (Appendix B2a) |
 | **the ceiling, 0.937** | Guo's replicate statistics for the published label | **closed, and it was higher as predicted: 0.946 [0.944, 0.948]**, from crisprHAL's own per-replicate counts (Finding 11) |
 | **`n_features` = 300** | selector sweep on 6,232 published columns | **closed.** Selecting 300 against using every column: 0.5445 / 0.5449 on the base and 0.7084 / 0.7079 with family A. ±0.0005 in both directions, so the budget is free on this cohort too (Finding 2) |

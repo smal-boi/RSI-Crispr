@@ -7,7 +7,7 @@ the question has a clean form: freeze the architecture, the feature set and the
 hyperparameters, change only which rows and which label the model sees, and score
 every arm on one held-out set that nothing was fitted on.
 
-**The yardstick** is crisprHAL 2's own shipped WT-SpCas9 test partition -- 6,748
+**The yardstick** is crisprHAL 2's own shipped WT-SpCas9 test partition -- 6,749
 guides at a 378 nt context (protospacer at offset 189; all of them locate in our
 curated feature build). Browne et al. report rho **0.695** on it, and our re-run
 of their shipped weights gives 0.6940 (`crisprhal_rerun.csv`). No split,
