@@ -31,7 +31,7 @@ matter:
 | "DNA abundance is the single largest unexplained effect left" | 2026-09-15 (Part 10) | **2026-10-02** — decomposes into replication timing (no rank gain), GC/mappability (already in family A), and ≈+0.007 R² that is actually new |
 | "the flank effect transfers to another organism; the *E. coli*-only caveat is retired" | 2026-10-02 (evening) | **2026-10-02 (night)** — the cross-*enzyme* half holds under `arc5`, but the only other-organism screen covers 4.3% of one chromosome and cannot test the long-range gradient at all |
 | "LightGBM fits in 0.3 s, ~25,000× faster than crisprHAL" | September onward | **2026-10-03** — the 0.3 s is real (`model_comparison.csv`, 0.291 s) but is the *fit alone*, excluding feature selection at ~13× that. End to end: ~35 s/fold, ~3 min for five, against their 105 min — **~30–36×**, at comparable memory (3.55 vs 4.55 GB). Timings vary 13–116 s on this host because it swaps; see `results/timing.csv` |
-| "we are ahead of crisprHAL 2 by +0.0107, a small but consistent advantage" | 2026-10-02 | **2026-10-03 (later)** — tuning our own model alone is worth **+0.0103** (`tuning.csv`), so the margin sits inside the tuning effect. The claim reverts to **parity**; the tuned 0.7181 may be quoted only as tuned-vs-untuned |
+| "we are ahead of crisprHAL 2 by +0.0107, a small but consistent advantage" | 2026-10-02 | **2026-10-03 (later)** — tuning our own model alone is worth **+0.0103** (`tuning.csv` as it stood then — that file was later overwritten by the 300-draw search, and these two figures now live in `tuning_trials12.csv`, verified: rho_tuned mean 0.7181, delta_rho mean 0.0103), so the margin sits inside the tuning effect. The claim reverts to **parity**; the tuned 0.7181 may be quoted only as tuned-vs-untuned |
 | "√0.810 ≈ 0.90 is a *conservative* ceiling, since the enzymes differ" | September onward | **2026-10-03 (later)** — the two screens share their **guide library** (100% identical sequences) and eSpCas9 is WT plus three point mutations, so 0.810 is the best case for agreement. **0.90 is an optimistic upper bound** |
 | "the permutation floor is −0.0018 to +0.0014" | September onward | **2026-10-03 (later)** — that is `a_flank`'s floor, quoted for all nine families. Measured per family and paired fold-by-fold, **`h_offtarget` is below its own floor** (0.8×) and **`f_methylation` is marginal** (3.0×) |
 | "windowed composition beats a CNN four times over, +0.164 against +0.019" | 2026-09-15 | **2026-10-03 (later)** — different datasets. Like for like on the original 13,880 rows it is **+0.080 against +0.019**, still 4.2×; `RESULTS.md` §13 had this right all along |
@@ -4783,3 +4783,48 @@ The remaining flags are figures the checker cannot compute — means over folds 
 draws (0.6987, 0.4785, 0.5247), a teammate's quoted 0.472, and counts derived by
 arithmetic from verified ones (6,095 = 6,232 − 74 − 63). Re-run
 `python -m sgrna.numcheck` after any edit; the flag list should stay at these.
+
+---
+
+## 26 October 2026 — numcheck extended to the appendices, this log, and the correspondence
+
+`numcheck.py` now scans nine documents instead of four, and splits the progress
+report at its own headings so a miss in Part 1 is distinguishable from one in the
+appendices. Totals:
+
+| | coverage misses | attribution misses |
+|---|---:|---:|
+| report Part 1 | 8 | 0 |
+| report Parts 2–5 | 1 | 0 |
+| report appendices | 6 | 0 |
+| README | 4 | 0 |
+| RESULTS.md | 2 | 16 |
+| **FINDINGS_LOG.md** | **59** | **12** |
+| correspondence (4 files) | 18 | 0 |
+
+**The report and README come through clean** — every coverage miss there is a
+structural count that belongs to the inputs rather than to `results/` (5,887
+`V`-prefixed columns, 13,877 single-copy guides, 6,095 = 6,232 − 74 − 63, the
+oriC coordinate), and all three of the checkable ones were verified against the
+raw data this morning. No attribution miss at all in the report.
+
+**The log's 59 are expected and are not errors.** It is a chronological record
+that quotes other people's papers — crisprHAL 1's 40,308 guides, Noshay's 40,468,
+Cui's 85,392, *Nat Commun* 14:5514 — and numbers from a teammate's own result
+files. A figure from a paper is not supposed to be in our `results/`.
+
+**One real finding, and it is a new class: a citation orphaned by an
+overwrite.** The 3 October entry attributes **+0.0103** and the tuned **0.7181**
+to `tuning.csv`. Both were correct when written, but that file was later
+overwritten by the 300-draw search, and the figures now live in
+`tuning_trials12.csv` — verified there: `rho_tuned` mean 0.7181, `delta_rho` mean
+0.0103. The data survived; the pointer rotted. The line now says where the
+numbers went. This is distinct from the thirteen lost-producer files: there the
+*code* was gone, here the code is fine and the *output* was replaced in place.
+Worth a habit: when a rerun widens a search, write the new result to a new name
+rather than over the old one.
+
+**Two flags that are the checker working correctly.** Today's own entry quotes
+the two mis-citations it fixed — "cited `additivity_reduced.csv` for
+−0.0118/−0.0143" and "cited to `asymmetry_strand_audit.csv`" — so the checker
+flags them again. A checker that did not would be ignoring quoted text.

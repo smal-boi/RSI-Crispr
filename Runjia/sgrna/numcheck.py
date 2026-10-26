@@ -30,8 +30,25 @@ from collections import defaultdict
 
 ROOT = pathlib.Path("/Users/runjia/Claude/Projects/RSI09")
 RES = ROOT / "results"
-DOCS = [ROOT / "docs/PROGRESS_REPORT.md", ROOT / "README.md",
-        RES / "RESULTS.md", ROOT / "RSI-Crispr/README.md"]
+DOCS = [ROOT / "docs/PROGRESS_REPORT.md", ROOT / "docs/FINDINGS_LOG.md",
+        ROOT / "README.md", RES / "RESULTS.md", ROOT / "RSI-Crispr/README.md",
+        *sorted((ROOT / "docs/correspondence").glob("*.md"))]
+
+# The report is one file but four audiences: Part 1 is the claims, the
+# appendices are the evidence behind them, and a miss in each means something
+# different. Split the report at its own headings so the counts are readable.
+SECTIONS = {"## Part 1": "report Part 1", "## Part 2": "report Parts 2-5",
+            "## Appendix A": "report appendices"}
+
+
+def section_of(doc, line_no, offsets):
+    if doc != "PROGRESS_REPORT.md":
+        return doc
+    name = "report front matter"
+    for start, label in offsets:
+        if line_no >= start:
+            name = label
+    return name
 
 NUM = re.compile(r"(?<![\w.])([+-]?\d+(?:,\d{3})*(?:\.\d+)?)(?![\d])")
 FILE = re.compile(r"`([A-Za-z0-9_.\-]+\.(?:csv|json))`")
@@ -80,7 +97,10 @@ def present(val, dec, tab): return round(val, dec) in tab[min(dec, 5)]
 
 cov, attr = [], []
 for doc in DOCS:
-    for ln, line in enumerate(doc.read_text().splitlines(), 1):
+    lines = doc.read_text().splitlines()
+    offsets = [(i, lbl) for i, l in enumerate(lines, 1)
+               for h, lbl in SECTIONS.items() if l.startswith(h)]
+    for ln, line in enumerate(lines, 1):
         if SKIP_LINE.search(line): continue
         cited = [f for f in FILE.findall(line) if f in FILE_R]
         for tok in NUM.findall(line):
@@ -88,13 +108,21 @@ for doc in DOCS:
             if val is None: continue
             if dec == 0 and abs(val) < 1900: continue
             if dec == 1: continue
+            where = section_of(doc.name, ln, offsets)
             if not present(val, dec, ALL_R):
-                cov.append((doc.name, ln, tok, line.strip()[:95]))
+                cov.append((where, doc.name, ln, tok, line.strip()[:95]))
             if cited and not any(present(val, dec, FILE_R[f]) for f in cited):
-                attr.append((doc.name, ln, tok, ",".join(cited), line.strip()[:95]))
+                attr.append((where, doc.name, ln, tok, ",".join(cited),
+                             line.strip()[:95]))
 
+from collections import Counter
 print(f"result files indexed: {len(FILES)}")
+print(f"documents: {len(DOCS)}")
 print(f"\nCOVERAGE misses: {len(cov)}")
-for r in cov: print(f"   {r[0]}:{r[1]}  {r[2]:>12}   {r[3]}")
+for k, v in Counter(r[0] for r in cov).most_common():
+    print(f"   {v:4d}  {k}")
+for r in cov: print(f"   {r[1]}:{r[2]}  {r[3]:>12}   {r[4]}")
 print(f"\nATTRIBUTION misses: {len(attr)}")
-for r in attr: print(f"   {r[0]}:{r[1]}  {r[2]:>12}  not in {r[3]}")
+for k, v in Counter(r[0] for r in attr).most_common():
+    print(f"   {v:4d}  {k}")
+for r in attr: print(f"   {r[1]}:{r[2]}  {r[3]:>12}  not in {r[4]}")
