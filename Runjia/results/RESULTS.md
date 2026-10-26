@@ -57,7 +57,10 @@ marked **[P]** published or **[C]** curated. They are not interchangeable.
 | The folding gain is the **real structure**: position-shuffled folds are a null | +0.0119 vs −0.0002 over 3 permutations | [C] | `redescription_folds.csv` | `python -m sgrna.redescription --arm folds` |
 | `d_mechanics`'s outside half is provenance, not non-linearity | 8 flank cols +0.0968; 2 guide-only +0.0019 | [C] | `redescription_provenance.csv` | `python -m sgrna.redescription --arm provenance` |
 | Chi sites are indistinguishable from any GC-matched octamer — the RecBCD repair route is excluded | 41st percentile of 200 controls | [C] | `chi_sites.csv` | `python -m sgrna.chi_sites` |
-| **The dCas9 null does not localise the effect to cleavage**: inside the CRISPRi screen's essential genes family A is worth +0.27 | +0.2679 (100 kb blocks), +0.2749 (gene-grouped) vs −0.0101 non-essential | [C] | `cui_essentiality_split.csv` | `python -m sgrna.cui_screen --essentiality` |
+| The dCas9 screen-wide null is an average: inside its essential genes family A reads +0.27 | +0.2679 (100 kb blocks), +0.2749 (gene-grouped) vs −0.0101 non-essential | [C] | `cui_essentiality_split.csv` | `python -m sgrna.cui_screen --essentiality` |
+| **…but that +0.27 is the dCas9 strand rule, not the flank effect** — given a strand indicator family A adds nothing, so the cleavage localisation holds | strand alone ρ 0.6621; family A then +0.0069 (blocks), +0.0148 (genes) | [C] | `cui_essential_strand.csv` | `python -m sgrna.cui_screen --strand` |
+| …and not a location lookup either: the bare coordinate buys nothing | ρ 0.0394 alone, −0.021 on the base | [C] | `cui_essential_position.csv` | `python -m sgrna.cui_screen --position` |
+| Flank GC — the Finding 2 column — carries nothing in that screen; flank **purine** carries it | −0.0004 vs +0.4045 marginal ρ | [C] | `cui_essential_strand.csv` | `python -m sgrna.cui_screen --strand` |
 | Flank GC conditioning, re-measured on the curated cohort | +0.176 marginal → +0.221 partial; positive in all 5 strata | [C] | `gc_strata_corr_curated.csv` | `python -m sgrna.gcstrata --corr --cohort curated` |
 | Flank GC's marginal association is 3.6× stronger on the curated cohort than the published one | +0.161 vs +0.044 | [C] | — (`gcstrata.py` is pre-pivot) | `python -m sgrna.gcstrata --corr` |
 | Noshay's quantum columns beat every k-mer encoding of the same bases | +0.0114 | [C] | `curated_ladder.csv` | `python -m sgrna.curated_ladder` |
@@ -71,7 +74,7 @@ marked **[P]** published or **[C]** curated. They are not interchangeable.
 
 | claim | number | frame | evidence | command |
 |---|---|---|---|---|
-| **The effect is specific to cleavage, not Cas9 binding** | −0.009 vs +0.157 | Cui | `cui_screen.csv` | `python -m sgrna.cui_screen` |
+| **The effect is specific to cleavage, not Cas9 binding** | −0.009 vs +0.157; +0.007 inside essential genes with strand controlled | Cui | `cui_screen.csv`, `cui_essential_strand.csv` | `python -m sgrna.cui_screen` |
 | Orientation to the nearest TSS matters | Δ 0.051 [0.020, 0.082] | [P] | `../../RSI-Crispr/Jacky/orientation-controls/results/intergenic_orientation_controls_delta_ci.csv` (row `tss`); our strand audit is `asymmetry_strand_audit.csv` | Jacky's orientation controls |
 | Not helical phasing: GC skew and periodicity are null | −0.001 alone, +0.0004 on A | [P] | `ablation_jper.csv`, `ablation_jper_joint.csv` | `python -m sgrna.run_ablation --families j_periodicity --tag jper` |
 | Not flank shape: shape is a reparameterisation of composition | +0.0007 on top of A | [P] | `ablation_shape_joint.csv`, `cross_redundancy_*.csv` | `python -m sgrna.run_ablation --families i_shape --tag shape_joint` |

@@ -226,15 +226,15 @@ mostly family A's effect wearing another family's name.
 ---
 
 **Which brings the finding to its point: how few columns does the model actually
-need?** Two different questions hide behind that, and conflating them is what
-made this project's earlier claims unstable.
+need?** Two different questions hide behind that, they have different answers,
+and conflating them is how a reduction claim becomes unstable.
 
 **Question one — selection: can the model be handed fewer *candidates*? Yes, and
 it is free.** Selecting 300 columns inside each training fold against using every
 column: **0.5445 against 0.5449** on the curated base, and **0.7084 against
-0.7079** with family A. **±0.0005 in both directions.** The budget was never the
-binding constraint, which retires both the protocol caveat on every arm above and
-the `n_features` row in Part 4. Quadrupling the budget changes nothing either.
+0.7079** with family A. **±0.0005 in both directions.** The budget was never the binding constraint, so
+no arm above needs a protocol caveat for it. Quadrupling the budget changes
+nothing either.
 **A model given 300 of 6,169 columns is at parity with one given all of them** —
 that is the reduction claim that holds, and it holds on both cohorts.
 
@@ -243,7 +243,7 @@ one?** On the published matrix, yes. Adding the 63 hand-named columns to the 364
 indicators gives **427 columns at ρ 0.5249 against 0.5272** for all 6,232: loss
 **+0.0023, 95% CI [−0.0008, +0.0054]**, non-inferior at any margin from 0.0054
 upward (one-sided p = 0.035 against 0.005, which the two-sided interval sits just
-outside — Appendix B explains why the margin is no longer called pre-declared).
+outside; the margin was not pre-declared, and Appendix B audits that).
 And the set is **portable**, which is what a move to another cohort needs. Of the
 63 hand-named columns 26
 are computable from the 20-mer and its PAM, 2 need gene annotation, and 34 are
@@ -505,7 +505,7 @@ question:**
 |---|---|
 | read depth or mappability? | no — survives a high-uniqueness stratum, +0.078 → +0.051 |
 | gene ranking in disguise? | no — within-gene ρ 0.571 against 0.606 global; flanks worth **+0.061 inside genes** |
-| **Cas9 binding rather than cutting?** | **undecided, and this row used to say "cutting".** Family A adds −0.009 across a whole dCas9 CRISPRi screen but **+0.268** inside its essential genes, where knockdown actually has a phenotype — so the contrast separates phenotype from no phenotype, not cutting from binding |
+| **Cas9 binding rather than cutting?** | no — but only after a second control. Family A adds −0.009 across a dCas9 CRISPRi screen and reads **+0.268** inside its essential genes; that +0.268 is the screen's own strand rule, and given a strand indicator the family adds **+0.007** there |
 
 *Why these tests and not others.* Each removes one way the effect could be an
 artefact of this dataset rather than a property of the DNA. A new **nuclease**
@@ -520,14 +520,16 @@ the gene-ranking explanation by asking the question entirely inside genes, where
 "which gene" is constant. Nothing here is an intervention, so together they still
 only rule things out.
 
-**The one test that could have falsified the mechanism, and it did not.**
-Finding 2's account is a duplex-opening step limited by local DNA composition at
-the cut site. Every external check until now has been another Cas9 *cutting*
-screen, which cannot distinguish that from a general property of Cas9 binding or
-of local chromatin accessibility — both would predict a flank effect too. Cui et
-al.'s (2018) dCas9 **CRISPRi** screen can: dCas9 binds and does not cut, and the
-measured quantity is fitness under transcriptional silencing rather than survival
-after cleavage.
+**The one test that could have falsified the mechanism, and what it took to
+trust it.** Finding 2's account is a duplex-opening step limited by local DNA
+composition at the cut site. Every other external check here is another Cas9
+*cutting* screen, which cannot distinguish that from a general property of Cas9
+binding or of local chromatin accessibility — both would predict a flank effect
+too. Cui et al.'s (2018) dCas9 **CRISPRi** screen can: dCas9 binds and does not
+cut, and the measured quantity is fitness under transcriptional silencing rather
+than survival after cleavage. The screen-wide null below is the headline; it then
+survived a challenge that looked fatal, and the two tables after it are that
+challenge and its resolution.
 
 It had never been used for anything here except a single ceiling-range number, so
 it was the last genuinely untouched dataset available. 76,325 uniquely-targeting
@@ -550,15 +552,15 @@ rather than a selection artefact: adding 348 columns to a 6,169-column pool unde
 a 300-column budget could dilute selection, but family A on its own cannot be
 diluted, and on its own it reaches 0.133 against 0.341 on the cutting screen.
 
-**That null was read as localising the effect to cleavage, and it does not.**
-The reading assumed the two screens differ only in whether a cut is made. They
-also differ in what the *phenotype* requires: a Cas9 depletion screen scores a
-guide by whether its cells die, which works at any locus, while a CRISPRi screen
-scores the growth change from knocking a gene **down**, which needs that gene to
-be expressed and to matter. Where it does not, the guide scores ~0 however well
-dCas9 bound — and the label says that is most of this cohort. Essential-gene
-guides have a label sd of **2.886** against **1.133** for non-essential ones, and
-**85% of the genic cohort is non-essential**.
+**The challenge: a screen-wide average can hide the only guides that carry a
+signal.** The reading above assumes the two screens differ only in whether a cut
+is made. They also differ in what the *phenotype* requires: a Cas9 depletion
+screen scores a guide by whether its cells die, which works at any locus, while a
+CRISPRi screen scores the growth change from knocking a gene **down**, which
+needs that gene to be expressed and to matter. Where it does not, the guide
+scores ~0 however well dCas9 bound — and the label says that is most of this
+cohort. Essential-gene guides have a label sd of **2.886** against **1.133** for
+non-essential ones, and **85% of the genic cohort is non-essential**.
 
 Split on exactly that (`cui_screen.py --essentiality`,
 `results/cui_essentiality_split.csv`):
@@ -570,10 +572,11 @@ Split on exactly that (`cui_screen.py --essentiality`,
 | essential genes, gene-grouped | 5,514 | 2.886 | 0.2718 | 0.5468 | **+0.2749** |
 | essential genes, 100 kb blocks | 5,514 | 2.886 | 0.2805 | 0.5484 | **+0.2679** |
 
-**Restricted to loci where knockdown has a phenotype, family A is worth +0.27 in
-a dCas9 screen.** The non-essential half reproduces the published null exactly
+**Restricted to loci where knockdown has a phenotype, family A reads +0.27 in a
+dCas9 screen.** The non-essential half reproduces the published null exactly
 (−0.0101), so the −0.009 headline figure is an average dominated by guides whose
-knockdown barely moves growth.
+knockdown barely moves growth — which, taken at face value, retires the
+localisation entirely.
 
 The obvious objection is locus memorisation: essential genes cluster in the
 genome — ribosomal operons above all — flank composition is autocorrelated over
@@ -583,13 +586,60 @@ next door. Holding out 100 kb blocks instead of genes is the control for that,
 and the effect is **unchanged**: +0.2679 against +0.2749 across 44 blocks against
 297 genes.
 
-*So the honest statement is narrower than the one this section used to make.*
-What the dCas9 comparison shows is that the flank effect needs a **measurable
-phenotype**, not that it needs a **cut**. The cleavage-versus-binding question is
-reopened, and nothing here currently decides it. Everything downstream that
-rested on "absent in dCas9, therefore post-binding" is weakened accordingly —
-including the repair hypothesis in Appendix B, whose motivation was exactly that
-contrast.
+**The resolution: that +0.27 is not the flank effect, it is the dCas9 strand
+rule.** Block-grouping answers the locus objection and raises a sharper one —
+*what is family A predicting here?* Not what it predicts on a cutting screen:
+
+* **The Finding 2 column carries nothing.** Flank GC at ±500 nt, the column the
+  whole compositional account runs through, has a marginal Spearman of
+  **−0.0004** with the CRISPRi label inside these essential genes. Zero, to four
+  decimal places.
+* **The column that does carry it is strand-asymmetric.** Family A's strongest
+  column here is `eng.flank.comp.up1000.purine` at **+0.4045**. Purine content
+  counted on the guide's own strand flips with the guide's orientation, because
+  coding strands are purine-rich; it is a proxy for *which strand the guide
+  targets*, not for composition.
+* **And that is the dominant covariate of this assay.** Coding-strand guides
+  average a fitness score of **−5.07** against **−1.19** off it, and their mean
+  flank purine differs accordingly (0.4845 against 0.5137). dCas9 blocks
+  transcription far more effectively from one strand than the other; this is a
+  known property of CRISPRi and has nothing to do with Finding 2.
+
+Hand the model the strand indicator directly and family A has nothing left to
+add (`cui_screen.py --strand`, `results/cui_essential_strand.csv`, same
+seeds, 100 kb blocks):
+
+| inside the 5,514 essential-gene guides | columns | ρ |
+|---|---:|---:|
+| 20-mer base | 6,169 | 0.2805 |
+| base + family A | 6,517 | 0.5484 |
+| family A alone | 348 | 0.5227 |
+| **which strand the guide targets** | **1** | **0.6621** |
+| base + strand | 6,170 | 0.6506 |
+| **base + strand + family A** | **6,518** | **0.6575** |
+
+**One column beats the entire flank family, and once it is present family A is
+worth +0.0069** under block grouping and **+0.0148** under gene grouping — both
+an order of magnitude below the +0.157 the same family is worth on a cutting
+screen. A position-only control rules out the other obvious explanation: the bare
+genomic coordinate buys +0.0394 under block grouping, so the 348 columns were not
+acting as a location lookup (`results/cui_essential_position.csv`).
+
+**So the null holds where it matters, and it now has a positive control it
+previously lacked.** In the half of this cohort where the phenotype is
+measurable, with the assay's own dominant covariate supplied, flanking
+composition adds **+0.0069** (blocks) and **+0.0148** (genes) against **+0.157**
+on a cutting screen measured the same way. And the screen demonstrably *can*
+detect a guide-positioning effect — it detects one at ρ 0.66 from a single column
+— so an accessibility- or binding-limited flank effect of the size family A
+shows on a cutting screen would not have gone unseen here.
+
+*What this still is not.* The informative subset is 5,514 guides across 44
+blocks, the control rests on one strand indicator, and nothing here is an
+intervention — so this localises the effect to a step that requires a break
+rather than proving a mechanism. It is the strongest form of that claim the data
+support, and it was nearly lost: on the screen-wide average alone the
+localisation was right by accident, for a reason the average could not show.
 
 Two qualifications on the original null still stand. The 0.133 flank-only figure
 is **not zero** — flanking composition does carry information about CRISPRi
@@ -615,38 +665,19 @@ So the scope is narrower than "CRISPR" and wider than "killing bacteria":
 |---|---|
 | gene knockout, HDR knock-in, any edit that needs a double-strand break | **yes** — this is the quantity being predicted |
 | pooled knockout screens using Cas9 cutting as the perturbation | **yes**, and these are the screens it was fitted on |
-| CRISPRi / CRISPRa with dCas9 | **no** — measured, −0.009, and a guide-sequence model is the right tool there |
+| CRISPRi / CRISPRa with dCas9 | **no** — measured, −0.009 across the screen and +0.007 where its phenotype is measurable, and a guide-sequence model is the right tool there |
 | base and prime editing (nickase-based) | **untested**, and genuinely uncertain — these bind and nick rather than cut, which puts them between the two cases |
 
-*And what is a high-cleavage guide actually for?* The question behind the
-question, since "predicting which guide kills bacteria best" sounds like a
-strange goal. Four uses, in rough order of how much the prediction is worth:
-
-1. **Knockouts that work the first time.** A guide that cuts poorly produces a
-   cell line or strain with an intact gene, and the experiment reads as a
-   negative result rather than as a failed edit. Ranking guides is how that is
-   avoided, and it is why every editing protocol begins with guide selection.
-2. **Fewer guides per target, which is the cost term in every screen.** Pooled
-   libraries carry 5–10 guides per gene mostly to insure against bad ones. A
-   model at the top-decile precision measured here (0.30 on our folds, 0.49 on
-   the eSpCas9 split) lets a library designer cut that redundancy, which scales
-   the cost of a genome-wide screen roughly linearly.
-3. **Fewer false negatives in screens that have already run.** A gene that
-   scores as non-essential because its guides cut badly is a wrong biological
-   conclusion, not just a wasted well. An efficiency model is the covariate that
-   separates "this gene does not matter" from "this guide did not cut".
-4. **Therapeutic and antimicrobial editing**, where the edit has to happen in a
-   population of cells that cannot be re-transfected and re-screened — the
-   setting where guide choice is made once and cannot be revised.
-
-In every one of those the quantity wanted is cleavage efficiency, which is what
-the screens measure through survival and what this model predicts. **The dCas9
-null is therefore a specification, not a defect**: it says which
-library a user should and should not apply this to, and it is the reason the
-flank columns are worth building at all — a feature set that helped equally in
-both assays would be describing accessibility, which is already well covered. The
-one honest gap is the nickase row: nothing here speaks to base or prime editors,
-and the Cui result makes it a real question rather than a safe extrapolation.
+In each of those the quantity wanted is cleavage efficiency — whether a knockout
+takes, how many guides per gene a library has to carry, whether a gene scored
+non-essential because its guides cut badly — which is what the screens measure
+through survival and what this model predicts. **The dCas9 null is therefore a
+specification, not a defect**: it says which library a user should and should not
+apply this to, and it is the reason the flank columns are worth building at all
+— a feature set that helped equally in both assays would be describing
+accessibility, which is already well covered. The one honest gap is the nickase
+row: nothing here speaks to base or prime editors, and the Cui result makes it a
+real question rather than a safe extrapolation.
 
 For anyone whose application *is* silencing, the comparison in Finding 7 is the
 practical guidance: crisprHAL 2's raw-sequence model transfers to a CRISPRi
@@ -780,9 +811,11 @@ rows, and the difference can be bootstrapped paired on guides rather than across
 five folds (`heldout_compare.py`): **+0.0115** [+0.0074, +0.0157] at each side's starting
 configuration, **+0.0172** [+0.0136, +0.0209] with both tuned, and **+0.0043**
 [+0.0005, +0.0080] pitting our untuned model against their tuned one. Five of
-five folds favour SLICER: 0.7079 / 0.7121 / 0.7112 / 0.7136 for SLICER at its
-starting configuration against 0.6855 / 0.6988 / 0.6978 / 0.7022 / 0.7012 for
-crisprHAL at its published one.
+five folds favour SLICER. At seed 41, the seed for which both models' per-fold
+figures were recorded, SLICER's starting configuration gives 0.6950 / 0.7059 /
+0.7128 / 0.7121 / 0.7124 against crisprHAL's published one at 0.6855 / 0.6988 /
+0.6978 / 0.7022 / 0.7012 (`results/folds_ladder_base_full+a_flank.csv`,
+`results/crisprhal_rerun.csv`).
 
 *"Both at defaults" is a courtesy, not a fact.* `tune.DEFAULT` is a
 configuration inherited from the baseline script this project started from, not
@@ -843,15 +876,17 @@ and Pearson 0.780, and their weights give 0.7821 and 0.7801 here — which is wh
 makes the comparison quotable rather than a re-implementation of it. Paired on
 the same 11,898 guides, Δρ = **+0.0021**, 95% CI **[−0.0031, +0.0072]** — so the
 data support equivalence at **any margin from 0.0072 upward**, and no margin had
-to be chosen to say so (Appendix B explains why this report no longer claims a
-margin was pre-declared).
+to be chosen to say so: no margin here was pre-declared, so the interval is
+reported in place of a verdict (Appendix B audits the dates).
 And on both of their splits the margin is small and ours:
 
 | their split | their published ρ | SLICER | margin |
 |---|---:|---:|---:|
 | *E. coli* SpCas9, 26,830 train | 0.695 | **0.6997** | +0.005 |
-| *E. coli* eSpCas9, 47,591 train | 0.782 | **0.7842** | +0.002 | **All six metrics are individually
-indistinguishable from zero** — we lead on the two rank metrics, they lead on
+| *E. coli* eSpCas9, 47,591 train | 0.782 | **0.7842** | +0.002 |
+
+**All six metrics are individually indistinguishable from zero** — we lead on
+the two rank metrics, they lead on
 Pearson, R², top-decile precision and expected pick percentile, and every
 interval contains zero (Appendix A). So "they win some, we win others" is the
 right reading, and the reason is not the split itself but that no metric resolves
@@ -986,8 +1021,7 @@ adjudicate between architectures without already assuming what work costs. CPU
 time is the honest version of the claim and it is a statement about our hardware,
 not a law. The one measure that is genuinely architecture-free is **sample
 complexity**, because it says nothing about how the computation is done — and it
-is the stronger claim anyway, measured over all five folds rather than the one
-fold an earlier version of this used:
+is the stronger claim anyway, measured over all five folds:
 
 | guides needed to reach | SLICER | crisprHAL 2 |
 |---|---:|---:|
@@ -999,6 +1033,19 @@ fold an earlier version of this used:
 About half the labelled guides at every threshold, and **2.5×** at ρ ≥ 0.68
 (`sample_complexity.py`). So the defensible form of the cost claim is the
 data-efficiency one: it does not depend on which machine either model ran on.
+
+**What these ρ values mean on the decision scale**, since every number in Part 1
+is one. ρ measures whether the ordering is right, which is the right headline
+because nobody needs a guide's exact efficiency — but **ratios of Δρ are not
+ratios of information**, since on the ρ² scale the same Δρ is worth twice as much
+higher up, which is why this report quotes paired differences and raw ρ rather
+than percentages. Translated into the choice a user actually makes: given ten
+candidate guides, a model at ρ 0.71 picks one landing at the **81st percentile**
+of the ten, against the 50th for blind choice and the 88th at the label's
+ceiling. The whole range from useless to perfect spans the 50th to the 91st,
+because ten random candidates need not contain a good one — so the distance
+between this model and a perfect one is smaller, in decisions, than the distance
+between ρ 0.71 and ρ 0.946 looks.
 
 *Why the advantage exists at all is Finding 2*, which is a statement about
 long-range context rather than about architecture. *The conditions that make
@@ -1027,10 +1074,11 @@ effect here; a spatially local compositional gradient rather than a motif, shown
 with a texture-preserving null that also measures its autocorrelation length;
 not mappability, not gene ranking, and it survives holding out whole genes. It
 transfers across nuclease and organism — 88–91% retained with no retraining —
-and not across kingdoms. It does **not** appear across a dCas9 silencing screen
-as a whole (−0.009) but is worth **+0.268 inside that screen's essential genes**,
-so what the contrast tracks is whether the phenotype is measurable, not whether
-a cut was made; the cleavage-versus-binding question is open (Findings 2–3).
+and not across kingdoms. It does **not** appear in a dCas9
+silencing screen — −0.009 across the screen, and **+0.007** inside the essential
+genes where the phenotype is measurable, once that assay's own strand rule is
+controlled for — which localises it to a step requiring a break rather than to
+binding or accessibility (Findings 2–3).
 
 **3. Parity with the state of the art, from a representation of long-range
 context that a tuned convolutional network does not extract at this sample
@@ -1071,14 +1119,16 @@ mechanism.
    effect survives a 1 kb shift, none survives 10 kb) and no dependence on where
    the window edges are put (+0.1634 against +0.1638 at four different widths).
    There is no motif to find.
-2. **The effect belongs to the cleavage step, not to binding or accessibility.**
-   **This item has been withdrawn.** The dCas9 screen's −0.009 is an average
-   over a cohort that is 85% non-essential genes, where knockdown barely moves
-   growth whatever dCas9 does. Inside its essential genes family A is worth
-   **+0.268**, and that survives holding out 100 kb blocks rather than genes. The
-   comparison separates *measurable phenotype* from *no measurable phenotype*,
-   not cleavage from binding, so binding- and accessibility-limited accounts are
-   back on the table (Finding 3).
+2. **The effect belongs to a step that requires a break, not to binding or
+   accessibility.** In a dCas9 CRISPRi screen on the same genome the same
+   features add **−0.009** across the screen and **+0.007** inside the essential
+   genes where knockdown has a measurable phenotype, once that screen's own
+   strand rule is controlled for — against **+0.157** on a cutting screen. Both
+   binding-limited and chromatin-limited accounts predict a flank effect in a
+   dCas9 screen and neither produces one. This is the one result here that
+   localises a mechanism rather than bounding one, and it is the claim that came
+   closest to being lost: taken on the screen-wide average alone it would have
+   been right for a reason the average cannot show (Finding 3).
 3. **It is a local property of the target, not a property of its gene.** Asked
    entirely inside genes, where gene identity is constant, the flanks are still
    worth **+0.061**, and the whole effect survives holding out whole genes.
@@ -1249,9 +1299,10 @@ In a pooled Cas9 depletion screen a guide scores as efficient when the cells
 carrying it fail to survive. Measured efficiency is therefore
 **P(cut) × P(the break is unsurvivable)**, and every model in this literature,
 including this one, is fitted to the product, and no experiment here separates
-the two terms. The dCas9 contrast was briefly thought to put the effect in the
-term that requires a break; it does not (item 2 above), so **both terms remain
-open** and so does binding. One repair route testable from sequence alone —
+the two terms. The dCas9 contrast puts the effect in the term that
+requires a break (Finding 3), which is as far as sequence data reach: it does not
+say whether what varies is P(cut) or P(the break is unsurvivable), so **both of
+those terms remain open**. One repair route testable from sequence alone —
 RecBCD attenuation at Chi sites — is **excluded** on its own merits: Chi behaves
 like any other octamer of its GC content, sitting at the 41st percentile of 200
 GC-matched controls (Appendix B).
@@ -1405,10 +1456,8 @@ biology paper.
 **The analysis is frozen as of 11 October 2026.** No further model, feature or
 hyperparameter choice is made against the curated five-fold split.
 
-**Where the model stands against the state of the art is Finding 7**, which
-was written in this section while it was being measured and has been moved into
-Part 1 now that it is settled. The freeze matters to it in one way worth stating
-here: **eSpCas9 was designated "the untouched final evaluation" and was not
+**Where the model stands against the state of the art is Finding 7.** The freeze
+matters to it in one way worth stating here: **eSpCas9 was designated "the untouched final evaluation" and was not
 untouched** — four feature arms had already been run on it across three seeds and
 two CV schemes (`results/transfer.csv`), with a flank gain of **+0.104 under
 `arc5`** quoted in `RESULTS.md` (now `RESULTS_archive_2026-10-10.md`). Nothing was ever *selected* on it, so it is
@@ -1456,13 +1505,17 @@ search makes unlikely to change the answer. What the draft must carry, and what
 this list exists to make unavoidable:
 
 **The last untouched dataset has now been spent, deliberately, on the one
-question that could have falsified the mechanism.** Cui et al.'s dCas9 CRISPRi
-screen was the only external set never used for a model, feature, split or
-hyperparameter. It was spent on "is the flank effect about cutting or about
-binding?", and the answer is cutting: family A adds **−0.009** there against
-**+0.157** on the cutting screen (Finding 3). **No untouched dataset remains**,
-so the adaptive-overfitting caveat below is permanent rather than pending, and
-further external validation needs new data.
+question that could have falsified the mechanism — and it took two rounds to
+read.** Cui et al.'s dCas9 CRISPRi screen was the only external set never used
+for a model, feature, split or hyperparameter. It was spent on "is the flank
+effect about cutting or about binding?" Family A adds **−0.009** across that
+screen against **+0.157** on the cutting screen; restricted to the essential
+genes where knockdown has a phenotype at all it reads **+0.268**, and that +0.268
+turns out to be the screen's own strand rule, leaving **+0.007** once a strand
+indicator is supplied (Finding 3). The answer is cutting, and the second round is
+what makes it trustworthy. **No untouched dataset remains**, so the
+adaptive-overfitting caveat below is permanent rather than pending, and further
+external validation needs new data.
 
 
 * the headline comparison is **parity, not a win** — +0.005 and +0.002 on
@@ -1556,7 +1609,7 @@ arm's own gap swings ±0.015 between sealings, so three draws could not resolve 
 0.009 effect, and a point estimate of zero from an underpowered design is not
 evidence of zero. Twelve more draws cost one night of a plugged-in laptop.
 
-*Which number it moves, which is the opposite of what we first assumed.* The
+*Which number it moves, and it is not the one intuition reaches for.* The
 **absolute** figures are not detectably inflated: the frozen arm scores 0.7043
 in pool CV and **0.7077** on sealed genes, a gap of −0.0035 whose interval
 contains zero — the sealed genes are, if anything, marginally easier. What
@@ -1619,7 +1672,7 @@ cost, because the cost was not small.
 | the GC account | conditioning *raises* flank GC's association — on the curated cohort, **+0.176 marginal → +0.221 partial** — and it is positive in all five target-GC strata (+0.425 down to +0.068), strongest where the target itself is GC-poor |
 | the reduced representation | **412 columns** computable from any 20-mer land 0.00003 ρ from all 6,232 — portability, not just sufficiency |
 | data efficiency | survives all five folds; the ρ ≥ 0.68 ratio goes **1.4× → 2.5×** |
-| ~~the mechanism~~ | this row claimed the dCas9 screen localised the effect to cleavage. It does not: −0.009 across that screen but **+0.268** inside its essential genes, under both gene- and block-grouped CV. Listed here as the one control that **failed on re-examination** rather than on first use (Finding 3) |
+| the mechanism | the dCas9 null survived the one re-examination that looked fatal to it. Restricted to the essential genes where knockdown has a phenotype, family A reads **+0.268** — but that is the screen's own strand rule, and given a strand indicator the family is worth **+0.007** there against +0.157 on a cutting screen. The control the claim previously lacked, and the claim is stronger for it (Finding 3) |
 | the flanking-context thesis | on the curated cohort nothing confined to the guide clears **+0.019** and nothing above **+0.05** is confined to it. Arrived at by withdrawing a claim that pointed the other way, and since re-scoped: the ordering is by what the model cannot already compute, not by what the phenotype depends on (Part 2) |
 
 ### What that means
@@ -1637,8 +1690,8 @@ reproducing ρ 0.472 on the human matrix showed our human model was the wrong
 shape for its data, and the transfer interval was resting on that. None were caught by
 re-reading the text, and in every case the data needed was already on disk: the
 bottleneck was that nobody had asked the number to defend itself.
-`docs/withdrawn_claims.md`, which is local, holds each one with what replaced
-it.
+`docs/FINDINGS_LOG.md`, which is local, records each one where it happened,
+with what replaced it.
 
 ---
 
@@ -1944,15 +1997,25 @@ counts (Finding 6), and 0.937 for the published one by a different route.
 
 **The cross-assay control: a screen where the mechanism should *not* apply.**
 *Why it works:* every other external check is another Cas9 cutting screen, so a
-flank effect there is consistent with cutting, with binding, and with local
-accessibility alike. dCas9 binds without cutting, so a flank effect that is
-about the cleavage step must disappear, while one about binding or accessibility
-must survive. The control is the only one here that could have falsified a
-mechanism rather than a number.
+flank effect there is consistent with cutting, with binding and with local
+accessibility alike. dCas9 binds without cutting, so a flank effect about the
+cleavage step must disappear while one about binding or accessibility must
+survive. It is the only control here that could have falsified a mechanism rather
+than a number.
 *Without it:* Finding 2's mechanism sentence would rest on plausibility. Family A
 adds **−0.009** to a CRISPRi screen and **+0.157** to a cutting screen under one
 protocol, with a flank-only arm (0.133 against 0.341) to rule out selection
 dilution (Finding 3).
+*The control it needed in turn, because a cross-assay comparison is a mechanism
+test only if the two assays differ in exactly one respect.* They differ in two:
+CRISPRi also needs the silenced gene to matter, and 85% of that cohort is genes
+whose knockdown barely moves growth. Restricted to the essential genes the same
+features read **+0.268** — which is the screen's own strand rule, not the flank
+effect, since flank GC's marginal association there is −0.0004 and a single
+strand indicator scores ρ 0.662 on its own. Given that indicator, family A adds
+**+0.007**. The null holds in the informative half, and the strand result is the
+positive control the original comparison lacked: this assay plainly *can* see a
+guide-positioning effect.
 
 **The replicate-split ceiling.**
 *Why it works:* a ceiling has to come from the measurement, not the model. Two
@@ -2693,8 +2756,8 @@ information whatsoever. It is a deterministic function of twenty bases the model
 already has. And it buys more than the other nine columns of its family put
 together.
 
-**And `b_energy` and `c_folding` are not two independent witnesses to that, as
-this section first claimed.** `eng.dg.guide_selffold` and
+**And `b_energy` and `c_folding` are not two independent witnesses to that.**
+`eng.dg.guide_selffold` and
 `eng.fold.spacer_mfe` are **the same quantity computed twice in two different
 folders** — Pearson 0.9993, identical on all but a handful of guides where the
 two modules prepare the sequence slightly differently. So the single column
@@ -2845,8 +2908,8 @@ noise and says nothing about this — at ρ this close to zero only resampling t
 test rows can, which is why the interval is bootstrapped rather than taken from
 the seeds.
 
-The one place it could bite is Finding 3's falsification test, where family A
-adds −0.009 on Cui's CRISPRi screen. An underfit model that could not use the
+The one place it could bite is the Cui null in Finding 3, where family A adds
+−0.009 across that CRISPRi screen. An underfit model that could not use the
 flank columns at all would produce the same null. It did not happen here: given
 nothing else, those same 348 columns reach ρ **0.1333** on Cui under gene-grouped
 CV, so the model demonstrably reads them and still gains nothing from them
@@ -2882,16 +2945,11 @@ annotations, none of which carries a mechanism of its own.
 
 ### Is the flank effect a *repair* effect? The Chi-site test, and it is a null
 
-**Read this section knowing its premise has since been withdrawn.** It was
-written while the dCas9 null was believed to localise the flank effect to the
-cleavage step, which made "whatever this is, it happens at or after the cut" a
-hard constraint and motivated looking for something that reads five hundred
-nucleotides *from a break*. The essentiality split in Finding 3 removed that
-constraint: family A is worth +0.268 inside the CRISPRi screen's essential
-genes, so the comparison never separated cutting from binding. The Chi test's
-**result** is unaffected — it is a measurement against a GC-matched null and
-stands on its own — but it is no longer testing a favoured hypothesis, only
-excluding one candidate among several.
+**What motivates this section.** The dCas9 comparison in Finding 3 puts the
+effect at or after the cut, which is a hard constraint: almost nothing at a cut
+site has any reason to read five hundred nucleotides. The route below is the one
+mechanism in *E. coli* that does. It is excluded by measurement against a
+GC-matched null, so the constraint stands and this candidate does not.
 
 The flank effect is **large** (+0.164), **smooth and compositional with no
 motif** out to ~500 nt (Finding 2), and **orientation-dependent** — the last
@@ -2968,20 +3026,14 @@ a coefficient of this kind, which is larger than the contrast, so it is a hint
 at the edge of the noise the control establishes — recorded here so it is not
 rediscovered as news, not claimed.
 
-### How to read the headline number
-
-ρ measures whether the ordering is right, which is the right headline because
-nobody needs a guide's exact efficiency. But **ratios of Δρ are not ratios of
-information** — on the ρ² scale the same Δρ is worth twice as much higher up — so
-this report quotes paired differences and raw ρ, not percentages. On the decision
-scale: given ten candidate guides, a model at ρ 0.71 picks one landing at the
-**81st percentile**, against the 50th for blind choice and the 88th at the
-ceiling. The whole range from useless to perfect spans the 50th to the 91st,
-because ten random candidates may not contain a great one.
+### Why ρ, and why R² beside it
 
 **Report ρ and R² together.** A LightGBM with a robust loss scored R² 0.192 with
 ρ 0.568 — the same model looking broken on one metric and respectable on the
-other.
+other. ρ is the primary metric here because it is crisprHAL 2's own reporting
+convention and because ranking is the decision the model is used for; what ρ
+means on that decision scale is in Finding 7, since it governs how every headline
+in Part 1 should be read rather than only these tables.
 
 ## Appendix B2 — Why the imported families failed, and why that is not a screen
 
@@ -3034,12 +3086,12 @@ has no force — `h_offtarget` and `j_periodicity` pass the screen and deliver
 nothing, and `i_shape` passes it and delivers +0.036 standalone, falling to
 +0.001 only once family A is present.
 
-*Withdrawn here:* earlier versions scored this rule as "8 times out of 8" in one
-direction and "7 of 9" in the other. **Neither count is supportable.** Only four
-families have positive R² at all, no threshold for "high" was ever declared, and
-`d_mechanics` — unambiguously high at 0.845 — returned +0.020, the second-largest
-gain in the table. The counts were doing rhetorical work the design cannot carry;
-the screen stands on its mechanism, not on a tally.
+*Why this is stated as a mechanism and never as a tally.* **No count of
+families is supportable here.** Only four families have positive R² at all, no
+threshold for "high" can be declared after the fact, and `d_mechanics` —
+unambiguously high at 0.845 — returned +0.020, the second-largest gain in the
+table. A score like "8 of 8" would be doing rhetorical work this design cannot
+carry.
 
 
 ### Why this is not a general screen
@@ -3101,9 +3153,8 @@ selection — it is a different, larger draw from the same Guo screen with a
 quality threshold. The guides crisprHAL drops look unremarkable on copy number
 and uniqueness; their only visible signature is a compressed label range.
 
-**What the procedure actually is** (Browne et al., 2026, read 15 October — this
-was an open gap in every earlier version of this report, and we train on their
-label):
+**What the procedure actually is** (Browne et al., 2026, read 15 October — worth
+setting out in full, because we train on their label):
 
 * **The score is not a read-count ratio.** It is the ALDEx2 `diff.btw` log2
   fold-change between the experimental (Cas9) and control (dead-nuclease) arms —
@@ -3343,16 +3394,14 @@ rather than to the guides Noshay selected from it. Every family that reads
 genomic context inherits that same slope, which is why one factor moves the whole
 column and leaves the ordering intact.
 
-*Correction, 13 October.* An earlier version of this table gave `i_shape`'s
-published Δρ as +0.001 and called the curated +0.120 a reversal from a flat null.
-**+0.001 was the wrong quantity**: it is `i_shape`'s increment *on top of family
-A* (`a_flank+i_shape` 0.6078 against `a_flank` 0.6068), while every other row is
-an increment over the base. Standalone, `i_shape` was **+0.036** on the published
-matrix, third-largest then as it is now. The family is a near-duplicate of family
-A, which is why its marginal value there is ~0 — a real and reported result, but
-not a null, and not an entry that belonged in a column of base-relative gains.
-The same substitution appears in Appendix B2's screen table and Appendix C, both
-now corrected.
+*Two different `i_shape` numbers exist and only one belongs in this column.*
+**+0.001** is `i_shape`'s increment *on top of family A* (`a_flank+i_shape`
+0.6078 against `a_flank` 0.6068); every row here is an increment over the base,
+where `i_shape` is **+0.036** on the published matrix, third-largest then as it
+is now. The family is a near-duplicate of family A, which is why its marginal
+value alongside it is ~0 — a real and reported result, but not a null, and not a
+base-relative gain. Quoting the +0.001 in this column would read as a reversal
+from a flat null, and there is no reversal.
 
 **It does not measure the selector.** The curated base is 6,169 sparse indicator
 columns with none of the 63 hand-named summaries the published base carried, and

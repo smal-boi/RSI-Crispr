@@ -10,8 +10,9 @@ project in plain language, with a glossary, for a reader without a biology or
 machine-learning background — it also places these numbers against the
 published state of the art and separates what is original from what is
 imported, having absorbed the former `NOVELTY.md` on 2026-10-02.
-[`docs/FINDINGS_LOG.md`](../docs/FINDINGS_LOG.md) is the chronological record,
-including which earlier claims were later overturned.
+`docs/FINDINGS_LOG.md` is the chronological record, including which earlier
+claims were later overturned; it is kept in the working folder and not
+published here, since git history is the authority for what was believed when.
 
 Protocol unless stated otherwise: seeds 41–45, 5 folds, top-300 features by
 XGBoost gain, 400-tree champion, with imputation, ranking and selection all

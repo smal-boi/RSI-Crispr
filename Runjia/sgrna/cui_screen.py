@@ -354,18 +354,120 @@ def essentiality_split(seeds=(41, 42, 43), n_splits=None, verbose: bool = True):
     return out
 
 
+# The essentiality split leaves one question open and it is the decisive one:
+# *what* is family A predicting inside those essential genes? Not what it
+# predicts on a cutting screen. Flank GC at +-500 nt -- the column Finding 2's
+# whole compositional account runs through -- has a marginal Spearman of -0.0004
+# with this label there. The column that does carry it is
+# `eng.flank.comp.up1000.purine` at +0.4045, and purine counted on the guide's
+# own strand flips with the guide's orientation, because coding strands are
+# purine-rich. So it is a proxy for which strand the guide targets -- which is
+# the dominant covariate of CRISPRi efficacy, with coding-strand guides averaging
+# -5.07 here against -1.19 off it.
+#
+# Two controls follow. `strand_split` hands the model the strand call directly;
+# if family A was a lossy re-encoding of it, it has nothing left to add.
+# `position_split` rules out the other reading, that 348 columns of local
+# composition act as a smooth genomic coordinate, by handing over the coordinate.
+STRAND_OUT = config.RESULTS / "cui_essential_strand.csv"
+POS_OUT = config.RESULTS / "cui_essential_position.csv"
+
+
+def _essential_frame():
+    """The essential-gene subset, with both groupings and the strand call."""
+    X, meta = build(verbose=False)
+    X = np.asarray(X, dtype=np.float32)
+    names = list(meta["names"])
+    y = np.asarray(meta["y"], dtype=float)
+    n_base = int(meta["n_base"])
+    gene = np.asarray([g if isinstance(g, str) else "" for g in meta["gene"]],
+                      dtype=object)
+    ess = np.asarray([str(e) for e in meta["essential"]], dtype=object)
+    has_gene = (gene != "") & (gene != "nan") & (gene != "None")
+    left = np.asarray(meta["left"], dtype=float)
+    block = np.floor_divide(left, 100_000).astype(int).astype(str)
+
+    raw = pd.read_csv(config.BADSEED / "screen_data.csv")
+    raw = raw[raw["ntargets"] == 1].groupby("guide", as_index=False).agg(
+        coding=("coding", "first"))
+    coding = raw.set_index("guide").reindex(meta["protospacers"])["coding"]
+    # 6,027 guides have no coding call; all of them sit outside genes, so none
+    # reaches the essential subset. -1 keeps the column free of NaN regardless.
+    cod = np.where(coding.isna(), -1.0, coding.astype(float)).astype(np.float32)
+
+    sel = has_gene & (ess == "True")
+    return dict(Xb=X[sel][:, :n_base], Xf=X[sel][:, n_base:], y=y[sel],
+                coding=cod[sel].reshape(-1, 1),
+                left=left[sel].reshape(-1, 1).astype(np.float32),
+                nb=names[:n_base], nf=names[n_base:],
+                groupings=(("100kb blocks", block[sel]), ("genes", gene[sel])))
+
+
+def _arm_sweep(arms, out, slug, seeds, n_splits, verbose):
+    from .run_ablation import cross_validate
+
+    f = _essential_frame()
+    rows = []
+    for gname, grouping in f["groupings"]:
+        for arm, Xa, nm in arms(f):
+            res = cross_validate(
+                Xa, f["y"], nm, ["arm"] * len(nm),
+                n_features=config.N_FEATURES, seeds=list(seeds),
+                n_splits=n_splits or config.N_SPLITS, verbose=False,
+                groups=grouping,
+                tag=f"cui_{slug}_{gname.replace(' ', '')}_{arm.replace('+', '_')}",
+                experiment=arm)
+            m = res["summary"]["spearman"]["mean"]
+            rows.append(dict(grouping=gname, arm=arm, spearman=m,
+                             spearman_sd=res["summary"]["spearman"]["sd"]))
+            if verbose:
+                print(f"  {gname:12s} {arm:20s}: rho {m:+.4f}", flush=True)
+            pd.DataFrame(rows).to_csv(out, index=False)
+    if verbose:
+        print(f"written -> {out}")
+    return pd.DataFrame(rows)
+
+
+def strand_split(seeds=(41, 42, 43), n_splits=None, verbose: bool = True):
+    """Does family A add anything once the strand call is given outright?"""
+    def arms(f):
+        return (("base+coding", np.hstack([f["Xb"], f["coding"]]),
+                 f["nb"] + ["screen.coding_strand"]),
+                ("coding_only", f["coding"], ["screen.coding_strand"]),
+                ("base+coding+a_flank",
+                 np.hstack([f["Xb"], f["coding"], f["Xf"]]),
+                 f["nb"] + ["screen.coding_strand"] + f["nf"]))
+    return _arm_sweep(arms, STRAND_OUT, "essstr", seeds, n_splits, verbose)
+
+
+def position_split(seeds=(41, 42, 43), n_splits=None, verbose: bool = True):
+    """Were the 348 columns acting as a smooth genomic coordinate?"""
+    def arms(f):
+        return (("coord_only", f["left"], ["genome.left"]),
+                ("base+coord", np.hstack([f["Xb"], f["left"]]),
+                 f["nb"] + ["genome.left"]))
+    return _arm_sweep(arms, POS_OUT, "esspos", seeds, n_splits, verbose)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--build", action="store_true")
     ap.add_argument("--run", action="store_true")
     ap.add_argument("--essentiality", action="store_true")
+    ap.add_argument("--strand", action="store_true")
+    ap.add_argument("--position", action="store_true")
     ap.add_argument("--cas9-reference", action="store_true")
     ap.add_argument("--force", action="store_true")
     a = ap.parse_args(argv)
-    if a.build or not (a.run or a.cas9_reference or a.essentiality):
+    if a.build or not (a.run or a.cas9_reference or a.essentiality
+                       or a.strand or a.position):
         build(force=a.force)
     if a.essentiality:
         essentiality_split()
+    if a.strand:
+        strand_split()
+    if a.position:
+        position_split()
     if a.run:
         run()
     if a.cas9_reference:

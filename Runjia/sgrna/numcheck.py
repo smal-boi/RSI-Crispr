@@ -30,9 +30,10 @@ from collections import defaultdict
 
 ROOT = pathlib.Path("/Users/runjia/Claude/Projects/RSI09")
 RES = ROOT / "results"
+# The findings log is deliberately absent: it records what was believed when,
+# so its superseded numbers are *supposed* to disagree with today's results.
 DOCS = [ROOT / "docs/PROGRESS_REPORT.md",
-        ROOT / "README.md", RES / "RESULTS.md", ROOT / "RSI-Crispr/README.md",
-        *sorted((ROOT / "docs/correspondence").glob("*.md"))]
+        ROOT / "README.md", RES / "RESULTS.md", ROOT / "RSI-Crispr/README.md"]
 
 # The report is one file but four audiences: Part 1 is the claims, the
 # appendices are the evidence behind them, and a miss in each means something

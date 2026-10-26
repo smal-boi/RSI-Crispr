@@ -57,7 +57,7 @@ search of their own (free Colab T4, 16 October) found **nothing better than thei
 published configuration**, which won four of five inner searches. And on a screen
 neither model trained on, **their** model transfers better (\|ρ\| 0.0867 against
 0.0609). The claim that survives every condition is parity plus data efficiency,
-not a better model. Details and all four conditions: Finding 12 of
+not a better model. Details and all four conditions: Finding 7 of
 [`docs/PROGRESS_REPORT.md`](PROGRESS_REPORT.md).
 
 (The source paper this extends reports Pearson 0.502 / R² 0.249 on the same
@@ -66,9 +66,14 @@ feature set.)
 **The effect is specific to cleavage, and the label's ceiling is now measured.**
 In a dCas9 **CRISPRi** screen — the last external dataset never used for
 anything here — family A adds **−0.009**, against **+0.157** on the cutting
-screen under the same whole-gene-holdout protocol. So the flanking-context effect
-belongs to the cleavage step, not to Cas9 binding or local accessibility, which
-is the one test that could have falsified the mechanism. Separately, the ceiling
+screen under the same whole-gene-holdout protocol. That screen-wide figure is an
+average over a cohort 85% of which is non-essential genes, where knockdown barely
+moves growth; restricted to its essential genes family A reads **+0.268**, and
+that +0.268 is the screen's own strand rule — a single strand indicator scores
+ρ 0.662 there on its own, and given it family A adds **+0.007**. So the
+flanking-context effect belongs to a step that requires a break, not to Cas9
+binding or local accessibility, and the strand result is the positive control the
+comparison previously lacked. Separately, the ceiling
 for the label we train on is **0.946 [0.944, 0.948]**, derived from crisprHAL's
 own published per-replicate counts rather than inherited from a different label,
 leaving ~0.22 ρ unaccounted for.
@@ -256,6 +261,7 @@ LightGBM**; the frozen XGBoost numbers above stay as the historical baseline.
 | [`results/RESULTS.md`](results/RESULTS.md) | **claim → evidence index**: for every claim the report makes, the file that backs it and the command that produced it, including the thirteen files whose producer is no longer in the repo |
 | [`results/RESULTS_archive_2026-10-10.md`](results/RESULTS_archive_2026-10-10.md) | the long-form commentary as it stood on 10 October 2026, kept verbatim — nulls, tangents and all |
 | `docs/qna_archive.md` | *(local only)* questions asked, answered and closed without moving a number — kept for conference Q&A, deliberately not in the report |
+| `docs/FINDINGS_LOG.md` | *(local only)* the chronological record — every result as it was first believed, every withdrawal where it happened, every bug. Git history is the authority; this is the reading copy |
 | [`lit_review/beyond_QCT_literature_review.md`](lit_review/beyond_QCT_literature_review.md) | why each feature family was tried in the first place |
 | `local/MISCONCEPTIONS.md` | *(local only, gitignored)* every claim we withdrew, why it was wrong and how it was caught |
 
@@ -278,7 +284,7 @@ RSI09/
 ├── notebooks/          ← start here
 │   ├── RSI09_pipeline.ipynb    the full walkthrough, step by step
 │   └── RSI09_quickstart.ipynb  three cells, if you just want it running
-├── docs/               PROGRESS_REPORT.md + qna_archive.md (local)
+├── docs/               PROGRESS_REPORT.md + qna_archive.md, FINDINGS_LOG.md (local)
 ├── colab/              scripts that need a GPU — run on free Colab, not here
 ├── archive/            earlier one-off scripts, kept for reference
 ├── sync_to_shared.sh   publishes the documents, code and cited results below
@@ -293,9 +299,9 @@ so anything teammates read has to exist in both places. Those pairs are
 generated, not maintained: `sync_to_shared.sh` is the only thing that should
 ever write to `RSI-Crispr/Runjia/`, and it rewrites the one link that differs
 between the two locations (this README's pointer to the report, which is in
-`docs/` here and a sibling there). Three things are deliberately *not* published:
-`docs/qna_archive.md`, the 19 MB Colab input, and the 255 result files no claim
-cites.
+`docs/` here and a sibling there). Four things are deliberately *not* published:
+`docs/qna_archive.md`, `docs/FINDINGS_LOG.md`, the 19 MB Colab input, and the
+255 result files no claim cites.
 
 ---
 
