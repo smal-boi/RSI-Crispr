@@ -72,6 +72,11 @@ def _oof_r2(Y: np.ndarray, A: np.ndarray, n_splits: int = 5) -> np.ndarray:
         pred[va] = A[va] @ coef
     ss_res = np.nansum((Y - pred) ** 2, axis=0)
     ss_tot = np.nansum((Y - np.nanmean(Y, axis=0)) ** 2, axis=0)
+    # A column with no variance has no R^2 to report. Returning NaN here and
+    # letting it fall through a chain of comparisons would silently file it
+    # under whichever label the last `else` happens to be -- which is how 32
+    # constant columns were first labelled "partly determined". They get their
+    # own class instead.
     with np.errstate(invalid="ignore", divide="ignore"):
         return 1.0 - ss_res / np.where(ss_tot > 0, ss_tot, np.nan)
 
@@ -168,8 +173,10 @@ def column_taxonomy(hi=0.99, lo=0.50, verbose=True):
 
     cols = pd.DataFrame(labels, columns=["family", "column"])
     cols["oof_r2_from_guide"] = r2
-    cols["kind"] = np.where(r2 >= hi, "determined by the guide",
-                   np.where(r2 <= lo, "outside the guide", "partly determined"))
+    kind = np.where(np.isnan(r2), "constant (no variance)",
+            np.where(r2 >= hi, "determined by the guide",
+             np.where(r2 <= lo, "outside the guide", "partly determined")))
+    cols["kind"] = kind
     cols.to_csv(COLUMNS_OUT, index=False)
     if verbose:
         print("\n  columns by kind:")
@@ -183,7 +190,7 @@ def column_taxonomy(hi=0.99, lo=0.50, verbose=True):
     if verbose:
         print(f"\n  base: rho {base_rho:.4f}", flush=True)
     for kind in ("determined by the guide", "partly determined",
-                 "outside the guide"):
+                 "outside the guide", "constant (no variance)"):
         idx = np.where(cols["kind"].to_numpy() == kind)[0]
         if len(idx) == 0:
             continue
@@ -210,15 +217,76 @@ def column_taxonomy(hi=0.99, lo=0.50, verbose=True):
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--arm", choices=["random", "taxonomy", "both"],
+    ap.add_argument("--arm", choices=["random", "taxonomy", "families", "both"],
                     default="both")
     a = ap.parse_args(argv)
     if a.arm in ("taxonomy", "both"):
         column_taxonomy()
     if a.arm in ("random", "both"):
         random_tables()
+    if a.arm == "families":
+        family_split()
     return 0
 
+
+
+# --------------------------------------------------------------------------
+# Every family split the way d_mechanics was
+# --------------------------------------------------------------------------
+
+FAMILY_SPLIT_OUT = config.RESULTS / "redescription_family_split.csv"
+
+
+def family_split(families=("a_flank", "b_energy", "c_folding", "d_mechanics",
+                           "f_methylation", "h_offtarget"),
+                 hi=0.99, lo=0.50, verbose=True):
+    """Does the d_mechanics lesson generalise? Split each family and measure.
+
+    `d_mechanics` turned out to be 22 columns restating the guide bundled with 8
+    reading flanking DNA, and the family-level number hid it. The column probe
+    says three other families are mixtures too -- `a_flank` carries 28 columns
+    the guide largely explains, `b_energy` is 9 guide columns and 1 outside,
+    `h_offtarget` splits 6 against 7 -- so each is run as two arms here rather
+    than one. A family whose halves behave alike was a fair bundle; one whose
+    halves diverge was not.
+    """
+    X, y, names, protos = _base()
+    A = _onehot(protos, order=2)
+    base_rho, base_sd = _cv(X, y)
+    rows = [dict(family="(base)", part="base", n_cols=0, spearman=base_rho,
+                 spearman_sd=base_sd, d_spearman=0.0)]
+    if verbose:
+        print(f"  base: rho {base_rho:.4f}", flush=True)
+
+    for fam in families:
+        try:
+            v, fn = _block(fam, protos)
+        except FileNotFoundError as exc:
+            if verbose:
+                print(f"  {fam}: skipped ({exc})")
+            continue
+        r2 = _oof_r2(v, A)
+        guide = np.where(r2 > lo)[0]          # determined or partly determined
+        outside = np.where(r2 <= lo)[0]       # NaN columns are in neither
+        const = np.where(np.isnan(r2))[0]
+        for part, idx in (("guide-explained", guide), ("outside", outside),
+                          ("constant", const),
+                          ("whole family", np.arange(v.shape[1]))):
+            if len(idx) == 0:
+                continue
+            rho, sd = _cv(np.hstack([X, v[:, idx]]), y)
+            rows.append(dict(family=fam, part=part, n_cols=len(idx),
+                             spearman=rho, spearman_sd=sd,
+                             d_spearman=rho - base_rho))
+            if verbose:
+                print(f"  {fam:15s} {part:16s} ({len(idx):3d} cols): "
+                      f"d {rho - base_rho:+.4f}", flush=True)
+            pd.DataFrame(rows).to_csv(FAMILY_SPLIT_OUT, index=False)
+
+    out = pd.DataFrame(rows)
+    if verbose:
+        print(f"written -> {FAMILY_SPLIT_OUT}")
+    return out
 
 if __name__ == "__main__":
     raise SystemExit(main())

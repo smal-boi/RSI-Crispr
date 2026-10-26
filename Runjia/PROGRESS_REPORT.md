@@ -789,6 +789,15 @@ on the inner split, which is noise. So:
 | published configuration | 0.6971 | +0.0241 |
 | **best configuration found by any search** | **0.7051** | **+0.0161** |
 | nested search, 5–8 draws per fold | 0.6987 | +0.0225 |
+| *the same search repeated, 26 October* | *0.6989* | *+0.0224* |
+
+**The search replicates on a second GPU session.** Run again from scratch on
+26 October it returns **0.6989** (folds 0.6895, 0.7012, 0.7063, 0.6983, 0.6994)
+against 0.6987, with their published configuration again winning four of five
+inner searches — and in both runs the one fold that chose otherwise did so on an
+inner margin of 0.0016, which is noise. A deep model's search landing within
+0.0002 across independent sessions is worth stating, because the usual objection
+to a single tuning run is that it is a single tuning run.
 
 **The conservative number to quote is +0.0161**, against the best configuration
 anyone has found for their model on these folds. And the asymmetry that matters
@@ -1239,7 +1248,7 @@ Remaining before submission:
 | | item | cost |
 |---|---|---|
 | 1 | ~~eSpCas9 final evaluation~~ | **done, and it is a tie** — ρ 0.7842 against 0.7821 on crisprHAL's own eSpCas9 split with their published weights, at 47,591 training guides. Also corrected: eSpCas9 was never an untouched holdout (above) |
-| 2 | ~~crisprHAL 2 given a search of its own~~ | **run 16 October, and it found nothing**: 0.6987 against the 0.6971 their published *configuration* reaches on these same folds, with that configuration winning the inner search in 4 of 5 folds. The margin against their *best known* configuration is **+0.0161**. Still not a fully matched search — ours used 97–157 draws per fold, theirs 5–8, so ~40 GPU-h would be needed to equalise (Appendix B) |
+| 2 | ~~crisprHAL 2 given a search of its own~~ | **run 16 October, and it found nothing**: 0.6987 against the 0.6971 their published *configuration* reaches on these same folds, with that configuration winning the inner search in 4 of 5 folds. **Independently repeated on a second Colab session, 26 October: mean 0.6989** (0.6895, 0.7012, 0.7063, 0.6983, 0.6994), again with their published configuration winning four of the five inner searches — a GPU result reproducing to 0.0002. The margin against their *best known* configuration is **+0.0161**. Still not a fully matched search — ours used 97–157 draws per fold, theirs 5–8, so ~40 GPU-h would be needed to equalise (Appendix B) |
 | 3 | ~~orientation controls~~ | **done** — Jacky, Finding 6 |
 | 4 | ~~human baseline re-tuned at the teammate's settings~~ | **done, and it reproduces: ρ 0.5076 against the 0.472 quoted.** The settings arrived 16 October; the gain is hyperparameters, not columns (+0.1002 against +0.0038), and the reason is that the human signal is far less additive than *E. coli*'s (ridge/boosting 63.7% against 95.6%), so the champion is the wrong shape for it by 0.10 ρ. **This cost a claim**: refitting the human side moved one cross-kingdom transfer direction from −0.016 to −0.006 [−0.023, +0.011], i.e. to zero, so "negative in both directions with intervals excluding zero" is withdrawn in favour of "no transfer in either direction" (Part 5, Appendix B) |
 | 5 | ~~conditional test of the GC hypothesis within matched GC strata~~ | **done** — Finding 5 |
@@ -2433,8 +2442,9 @@ predictors), out of fold, and sort by how much of each column the guide explains
 | | columns | Δρ over the curated base |
 |---|---:|---:|
 | **linearly recoverable from the guide** (R² ≥ 0.99) | 18 | **+0.0083** |
-| partly recoverable (0.50 < R² < 0.99) | 48 | +0.0197 |
+| partly recoverable (0.50 < R² < 0.99) | 16 | +0.0199 |
 | **not linearly recoverable** (R² ≤ 0.50) | 602 | **+0.2012** |
+| constant on this cohort, so no R² exists | 32 | −0.0003 |
 | all 668 together | 668 | +0.2027 |
 
 **Everything the guide determines is worth +0.008; everything it does not is
@@ -2442,10 +2452,28 @@ worth +0.20** — a factor of twenty-four, measured without reference to anyone'
 choice of folder. The sum of the three parts (+0.229) exceeds the joint arm
 (+0.203), which is the same overlap the family table shows.
 
-The classification also checks itself against two known cases: 13 of
-`d_mechanics`'s 30 columns come back as guide-determined and 10 as outside,
-against the 22/8 split measured a different way in Finding 2; and all 320
-surviving `a_flank` columns and all 152 of `i_shape` land outside, as they must.
+The classification checks itself against two known cases: 13 of `d_mechanics`'s
+30 columns come back as guide-determined and 10 as outside, against the 22/8
+split measured a different way in Finding 2; and 320 of `a_flank`'s 348 land
+outside, as do all 152 of `i_shape`, as they must.
+
+**And it turned up 32 columns that can never contribute anything, for two
+different reasons.** Both are properties of the feature set rather than of the
+model, and neither had been noticed:
+
+* **26 of family A** are `eng.flank.qct.dimer.Noelectrons.*` — the electron
+  count of the dinucleotide at each position — and every one of them is
+  **196 for every guide**. That is chemistry, not a bug: an A·T base pair and a
+  G·C base pair contain the same number of electrons, so a per-base-pair electron
+  count cannot vary with sequence. The descriptor is degenerate by construction
+  and has been carried in every family A run since September.
+* **6 of `h_offtarget`** — `mm1`, `mm2` and `seed_exact_mm1..4` — are **zero for
+  every guide**, because the curated cohort keeps only uniquely-targeting guides,
+  so no close off-target survives the filter. Those columns measure something
+  the cohort has defined away.
+
+Added as a block they are worth **−0.0003**, which is the right answer for 32
+constants competing for a 300-column budget.
 
 *What the probe measures, and what it does not.* It measures **linear**
 recoverability from mono- and dinucleotide indicators, which is a lower bound on
@@ -3467,18 +3495,21 @@ against Crossref metadata rather than transcribed from memory.
 
 ## Appendix E — Withdrawn claims
 
-Thirty-four claims have been withdrawn and fourteen bugs found. They are not listed
+Thirty-four claims have been withdrawn and fifteen bugs found. They are not listed
 here, so that this document reads as a statement rather than a diary; they are in
 `docs/FINDINGS_LOG.md` in date order and in `local/MISCONCEPTIONS.md`, outside
 the repo, with the cause of each.
 
-Three of the fourteen bugs share one shape and are worth naming as a class:
+**Four** of the fifteen bugs share one shape and are worth naming as a class:
 **a computation that fails and reports success.** `b_energy` wrote a feature
 block with zero feature columns because its builder catches import errors per
 guide; a selector control compared 300 columns against 300 because
-`n_features=None` resolves to `config.N_FEATURES`; and a wide-window crisprHAL
+`n_features=None` resolves to `config.N_FEATURES`; a wide-window crisprHAL
 run scored an untrained network because `train()` returns `None` identically on
-success and failure. None raised. Each produced a number of exactly the kind
+success and failure; and the column taxonomy filed **32 constant columns under
+"partly determined by the guide"** because an undefined R² came back as `NaN` and
+`NaN` fails every comparison in a chain, so it fell through to the final `else`.
+None raised. Each produced a number of exactly the kind
 expected, and the first two would have entered the report as clean null
 results.
 

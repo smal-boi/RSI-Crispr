@@ -181,32 +181,32 @@ a_flank,eng.flank.qct.dimer.Hbondstacking.d12,-0.005181132421380408,outside the 
 a_flank,eng.flank.qct.dimer.Hbondstacking.d13,-0.003973527592656234,outside the guide
 a_flank,eng.flank.qct.dimer.Hbondstacking.d14,-0.004646905795715028,outside the guide
 a_flank,eng.flank.qct.dimer.Hbondstacking.d15,-0.007150726301470289,outside the guide
-a_flank,eng.flank.qct.dimer.Noelectrons.u10,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.u9,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.u8,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.u7,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.u6,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.u5,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.u4,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.u3,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.u2,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.u1,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.pamN,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.d1,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.d2,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.d3,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.d4,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.d5,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.d6,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.d7,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.d8,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.d9,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.d10,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.d11,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.d12,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.d13,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.d14,,partly determined
-a_flank,eng.flank.qct.dimer.Noelectrons.d15,,partly determined
+a_flank,eng.flank.qct.dimer.Noelectrons.u10,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.u9,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.u8,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.u7,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.u6,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.u5,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.u4,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.u3,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.u2,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.u1,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.pamN,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.d1,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.d2,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.d3,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.d4,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.d5,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.d6,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.d7,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.d8,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.d9,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.d10,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.d11,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.d12,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.d13,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.d14,,constant (no variance)
+a_flank,eng.flank.qct.dimer.Noelectrons.d15,,constant (no variance)
 a_flank,eng.flank.qct.monomer.HLgapeV.u10,0.0010359307534809625,outside the guide
 a_flank,eng.flank.qct.monomer.HLgapeV.u9,0.0024498119921970707,outside the guide
 a_flank,eng.flank.qct.monomer.HLgapeV.u8,-0.0004138670854214599,outside the guide
@@ -479,14 +479,14 @@ g_transcription,eng.txn.ix.expr_x_codirectional,-0.005705107787282504,outside th
 g_transcription,eng.txn.ix.expr_over_tss_dist,-0.006349244345137173,outside the guide
 g_transcription,eng.txn.ix.template_x_leading,-0.0001755974624180201,outside the guide
 h_offtarget,eng.offt.copies,-0.007611542837872243,outside the guide
-h_offtarget,eng.offt.mm1,,partly determined
-h_offtarget,eng.offt.seed_exact_mm1,,partly determined
-h_offtarget,eng.offt.mm2,,partly determined
-h_offtarget,eng.offt.seed_exact_mm2,,partly determined
+h_offtarget,eng.offt.mm1,,constant (no variance)
+h_offtarget,eng.offt.seed_exact_mm1,,constant (no variance)
+h_offtarget,eng.offt.mm2,,constant (no variance)
+h_offtarget,eng.offt.seed_exact_mm2,,constant (no variance)
 h_offtarget,eng.offt.mm3,-0.006749679298970079,outside the guide
-h_offtarget,eng.offt.seed_exact_mm3,,partly determined
+h_offtarget,eng.offt.seed_exact_mm3,,constant (no variance)
 h_offtarget,eng.offt.mm4,0.015825021674952366,outside the guide
-h_offtarget,eng.offt.seed_exact_mm4,,partly determined
+h_offtarget,eng.offt.seed_exact_mm4,,constant (no variance)
 h_offtarget,eng.offt.le3,-0.006749679298970079,outside the guide
 h_offtarget,eng.offt.min_mismatch,0.04528284371618463,outside the guide
 h_offtarget,eng.offt.weighted_burden,0.00992619113055293,outside the guide

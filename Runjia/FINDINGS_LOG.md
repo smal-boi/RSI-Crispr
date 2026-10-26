@@ -4966,3 +4966,62 @@ GC test moved to **Finding 3**, where the mechanism belongs: Finding 3 goes 27 �
 66 lines and now reads size → locality → mechanism → the test that could have
 embarrassed it; Finding 5 drops to 143 and is transfer plus controls. Audited:
 no number lost in the move.
+
+---
+
+## 26 October 2026 (later) — a NaN in my own classifier, and 32 columns that cannot help
+
+**Correction to the taxonomy entry above.** Its middle row said "partly
+recoverable, 48 columns, +0.0197". Only **16** of those are partly recoverable.
+The other **32 have no variance at all**, so their R² is undefined, and `NaN`
+fails every comparison in a chain — `np.where(r2 >= hi, ..., np.where(r2 <= lo,
+..., "partly determined"))` therefore filed every one of them under the final
+`else`. Corrected classification, with the constants given their own class:
+
+| | columns | Δρ over the curated base |
+|---|---:|---:|
+| linearly recoverable from the guide (R² ≥ 0.99) | 18 | **+0.0083** |
+| partly recoverable | 16 | +0.0199 |
+| not linearly recoverable (R² ≤ 0.50) | 602 | **+0.2012** |
+| constant, so no R² exists | 32 | **−0.0003** |
+| all 668 | 668 | +0.2027 |
+
+The headline is unchanged — +0.008 against +0.201 — because constants contribute
+nothing, which the new row now measures rather than assumes. **Bug 15**, and the
+fourth of its kind: a computation that fails and reports success.
+
+**The bug found something real.** The 32 constant columns are not random:
+
+* **26 are family A's `eng.flank.qct.dimer.Noelectrons.*`**, the dinucleotide
+  electron count at each position, and every one is **196 for every guide**.
+  That is chemistry: an A·T pair and a G·C pair hold the same number of
+  electrons, so a per-base-pair electron count cannot vary with sequence. The
+  descriptor is degenerate by construction and has ridden along in every family
+  A run since September.
+* **6 are `h_offtarget`'s** `mm1`, `mm2` and `seed_exact_mm1..4`, **zero for
+  every guide**, because the curated cohort keeps only uniquely-targeting guides
+  — the columns measure something the cohort defined away.
+
+### The matched search replicates on a second GPU session
+
+Re-run from scratch on 26 October: **mean ρ 0.6989** (0.6895, 0.7012, 0.7063,
+0.6983, 0.6994) against 0.6987 on 16 October. Their published configuration won
+four of five inner searches again, and in both runs the one dissenting fold
+chose on an inner margin of **0.0016**. SLICER tuned on the same folds: 0.7213
+pooled out-of-fold, against 0.7040 for crisprHAL at its own 10-draw search.
+**A deep model's hyperparameter search landing within 0.0002 across independent
+sessions** is worth recording, since the standing objection to a single tuning
+run is that it is a single tuning run. The conservative margin is unchanged at
++0.0161 against the best configuration any search has found (0.7051).
+
+### Repo tidy
+
+Audited `Runjia/` against the working tree. Two strays removed: `numcheck.py`
+sitting at the folder root (an older duplicate of `sgrna/numcheck.py`, from a
+careless `cp`), and `sgrna/j_periodicity.py`, a copy of
+`sgrna/features/j_periodicity.py` at the wrong level — the only one of eleven
+family builders sitting outside the `features/` subpackage. Two stale claims
+fixed in `sgrna/README.md`: "the **ten** feature families" (there are eleven) and
+"how few columns the model needs (**427**, it turns out)", which is the figure
+Finding 2 replaced with 412-and-only-on-the-published-matrix. Everything else —
+the `features/` subpackage, the correspondence, the four documents — is in sync.
