@@ -58,7 +58,7 @@ published configuration**, which won four of five inner searches. And on a scree
 neither model trained on, **their** model transfers better (\|ρ\| 0.0867 against
 0.0609). The claim that survives every condition is parity plus data efficiency,
 not a better model. Details and all four conditions: Finding 12 of
-[`docs/PROGRESS_REPORT.md`](docs/PROGRESS_REPORT.md).
+[`docs/PROGRESS_REPORT.md`](PROGRESS_REPORT.md).
 
 (The source paper this extends reports Pearson 0.502 / R² 0.249 on the same
 feature set.)
@@ -111,7 +111,7 @@ matrix so it can be computed for any guide, showing which feature families
 *could not* have helped and why, and finding that the surrounding-DNA effect is
 a **smooth compositional gradient rather than a motif** — which is why the cheap
 model keeps up. Full assessment, written for someone outside the project, in
-[`docs/PROGRESS_REPORT.md`](docs/PROGRESS_REPORT.md).
+[`docs/PROGRESS_REPORT.md`](PROGRESS_REPORT.md).
 
 Everything in `src/` exists to answer one question: *what moves `cut.score`
 that the quantum descriptors do not already capture?* The reasoning and the
@@ -252,10 +252,10 @@ LightGBM**; the frozen XGBoost numbers above stay as the historical baseline.
 
 | file | what it is for |
 |---|---|
-| [`docs/PROGRESS_REPORT.md`](docs/PROGRESS_REPORT.md) | **start here** — the whole project for an outside reader: the twelve findings and the evidence for each, how it compares to published work, what is original rather than imported, where it stops, and the controls in the appendices, with a glossary and a guide to reading the statistics |
+| [`docs/PROGRESS_REPORT.md`](PROGRESS_REPORT.md) | **start here** — the whole project for an outside reader: the twelve findings and the evidence for each, how it compares to published work, what is original rather than imported, where it stops, and the controls in the appendices, with a glossary and a guide to reading the statistics |
 | [`results/RESULTS.md`](results/RESULTS.md) | **claim → evidence index**: for every claim the report makes, the file that backs it and the command that produced it, including the thirteen files whose producer is no longer in the repo |
 | [`results/RESULTS_archive_2026-10-10.md`](results/RESULTS_archive_2026-10-10.md) | the long-form commentary as it stood on 10 October 2026, kept verbatim — nulls, tangents and all |
-| [`docs/correspondence/`](docs/correspondence) | requests to and handoffs for teammates — what was asked, what came back, and what is left for whoever picks a thread up |
+| `docs/qna_archive.md` | *(local only)* questions asked, answered and closed without moving a number — kept for conference Q&A, deliberately not in the report |
 | [`lit_review/beyond_QCT_literature_review.md`](lit_review/beyond_QCT_literature_review.md) | why each feature family was tried in the first place |
 | `local/MISCONCEPTIONS.md` | *(local only, gitignored)* every claim we withdrew, why it was wrong and how it was caught |
 
@@ -274,16 +274,28 @@ RSI09/
 ├── external_data/      downloaded datasets — see its own README
 ├── lit_review/         papers + the review that motivates each family
 ├── src/sgrna/          the pipeline (imported by the notebooks)
-├── results/            314 result files + RESULTS.md (claim → evidence index)
+├── results/            335 result files + RESULTS.md (claim → evidence index)
 ├── notebooks/          ← start here
 │   ├── RSI09_pipeline.ipynb    the full walkthrough, step by step
 │   └── RSI09_quickstart.ipynb  three cells, if you just want it running
-├── docs/               PROGRESS_REPORT.md, qna_archive.md (local), correspondence/
+├── docs/               PROGRESS_REPORT.md + qna_archive.md (local)
 ├── colab/              scripts that need a GPU — run on free Colab, not here
 ├── archive/            earlier one-off scripts, kept for reference
-└── RSI-Crispr/         the team's shared git repo — `Runjia/` is a synced copy
-                        of the report, log and pipeline; edit them here, not there
+├── sync_to_shared.sh   publishes the documents, code and cited results below
+└── RSI-Crispr/         the team's shared git repo
+    └── Runjia/         **a build artefact, not a second copy to maintain.**
+                        Edit the sources above and run `./sync_to_shared.sh`;
+                        `--check` reports drift without changing anything
 ```
+
+**On there being two of some files.** The shared repo sits *inside* this folder,
+so anything teammates read has to exist in both places. Those pairs are
+generated, not maintained: `sync_to_shared.sh` is the only thing that should
+ever write to `RSI-Crispr/Runjia/`, and it rewrites the one link that differs
+between the two locations (this README's pointer to the report, which is in
+`docs/` here and a sibling there). Three things are deliberately *not* published:
+`docs/qna_archive.md`, the 19 MB Colab input, and the 255 result files no claim
+cites.
 
 ---
 
