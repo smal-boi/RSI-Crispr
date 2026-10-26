@@ -39,6 +39,7 @@ from .curated_ablation import FAMILIES, _base, _block
 
 RANDOM_OUT = config.RESULTS / "redescription_random.csv"
 TAXONOMY_OUT = config.RESULTS / "redescription_taxonomy.csv"
+FOLDS_OUT = config.RESULTS / "redescription_folds.csv"
 COLUMNS_OUT = config.RESULTS / "redescription_columns.csv"
 
 BASES = np.array(list("ACGT"))
@@ -217,8 +218,9 @@ def column_taxonomy(hi=0.99, lo=0.50, verbose=True):
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--arm", choices=["random", "taxonomy", "families", "both"],
-                    default="both")
+    ap.add_argument("--arm", default="both",
+                    choices=["random", "taxonomy", "families", "provenance",
+                             "folds", "both"])
     a = ap.parse_args(argv)
     if a.arm in ("taxonomy", "both"):
         column_taxonomy()
@@ -226,6 +228,10 @@ def main(argv=None) -> int:
         random_tables()
     if a.arm == "families":
         family_split()
+    if a.arm == "provenance":
+        provenance_split()
+    if a.arm == "folds":
+        random_folds()
     return 0
 
 
@@ -234,6 +240,7 @@ def main(argv=None) -> int:
 # Every family split the way d_mechanics was
 # --------------------------------------------------------------------------
 
+PROVENANCE_OUT = config.RESULTS / "redescription_provenance.csv"
 FAMILY_SPLIT_OUT = config.RESULTS / "redescription_family_split.csv"
 
 
@@ -287,6 +294,216 @@ def family_split(families=("a_flank", "b_energy", "c_folding", "d_mechanics",
     if verbose:
         print(f"written -> {FAMILY_SPLIT_OUT}")
     return out
+
+
+# Columns whose *definition* reads bases outside the 20-mer. The R-squared probe
+# cannot tell these apart from guide-only columns that are merely non-linear --
+# both land in "outside the guide" -- so provenance is read off the generator
+# code instead. In `d_mechanics` the two kinds are separable by name, which makes
+# it the one family where the distinction can be measured rather than argued:
+# the eight eng.mech.flank.* columns read 25 and 100 nt either side, while
+# slide.strongest_from_pam and stack.min are an argmax and a min over the
+# guide's own dinucleotide stack -- deterministic in the 20-mer, and non-linear,
+# which is why the linear probe puts them outside.
+PROVENANCE = {
+    "d_mechanics": {
+        "reads outside the 20-mer": ["eng.mech.flank."],
+        "guide-only but non-linear": ["eng.mech.slide.strongest_from_pam",
+                                      "eng.mech.stack.min"],
+    },
+}
+
+
+def provenance_split(family="d_mechanics", verbose=True):
+    """Within one family's "outside" half, separate provenance from non-linearity."""
+    X, y, names, protos = _base()
+    v, fn = _block(family, protos)
+    fn = list(fn)
+    rule = PROVENANCE[family]
+
+    base_rho, base_sd = _cv(X, y)
+    rows = [dict(family="(base)", part="base", n_cols=0, spearman=base_rho,
+                 spearman_sd=base_sd, d_spearman=0.0)]
+    if verbose:
+        print(f"  base: rho {base_rho:.4f}", flush=True)
+
+    groups = {}
+    for part, prefixes in rule.items():
+        groups[part] = [i for i, n in enumerate(fn)
+                        if any(n.startswith(p) or n == p for p in prefixes)]
+    groups["both halves together"] = sorted(
+        set(i for g in groups.values() for i in g))
+
+    for part, idx in groups.items():
+        rho, sd = _cv(np.hstack([X, v[:, idx]]), y)
+        rows.append(dict(family=family, part=part, n_cols=len(idx),
+                         spearman=rho, spearman_sd=sd,
+                         d_spearman=rho - base_rho))
+        if verbose:
+            print(f"  {part:26s} ({len(idx):2d} cols): d {rho - base_rho:+.4f}",
+                  flush=True)
+        pd.DataFrame(rows).to_csv(PROVENANCE_OUT, index=False)
+
+    if verbose:
+        print(f"written -> {PROVENANCE_OUT}")
+    return pd.DataFrame(rows)
+
+
+# --------------------------------------------------------------------------
+# Is the folding gain the physics, or only the non-linearity?
+# --------------------------------------------------------------------------
+# `random_tables()` showed that meaningless *linear* functions of the guide buy
+# nothing, and the family split showed that the columns which do pay are the
+# guide-determined ones a linear probe cannot see -- ViennaRNA folds, and one
+# self-folding energy worth +0.0116 alone. Those two results are consistent with
+# two very different readings:
+#
+#   (a) RNA secondary structure is part of the mechanism, and an explicitly
+#       computed fold energy delivers a real biological effect the model cannot
+#       reach from indicators; or
+#   (b) nothing biological is involved -- any non-linear, non-local summary of
+#       the guide would pay a depth-limited tree the same hundredth, and folding
+#       is simply the one we happened to compute.
+#
+# The two are separated by replacing the chemistry and keeping the algorithm.
+# `_fold_random` runs a Nussinov fold -- the minimum over the exponentially many
+# non-crossing pairings of the 20-mer -- with the nearest-neighbour energies
+# replaced by a random symmetric 4x4 table. `_sum_random` takes *the same table*
+# and sums it over the same position pairs instead of minimising over matchings.
+# So the two arms differ in the operator and nothing else:
+#
+#   sum  over pairs      non-local, linear      <- tree can approximate cheaply
+#   min  over matchings  non-local, non-linear  <- tree cannot
+#
+# If the fold arm pays and the sum arm does not, the gain belongs to the
+# combinatorial minimisation and reading (a) is unsupported: a *random* fold
+# would be doing the work of a real one. If neither pays, reading (a) survives
+# and the physics is load-bearing.
+MIN_LOOP = 3
+
+
+def _random_pair_table(rng) -> np.ndarray:
+    """A symmetric 4x4 pairing energy, in the shape of a real one."""
+    e = rng.normal(size=(4, 4)).astype(np.float32)
+    return ((e + e.T) / 2).astype(np.float32)
+
+
+def _fold_random(code: np.ndarray, e: np.ndarray) -> np.ndarray:
+    """Nussinov minimum-energy fold of every guide, vectorised over guides."""
+    n, L = code.shape
+    zero = np.zeros(n, dtype=np.float32)
+    E = {}
+    for i in range(L + 1):
+        for j in range(-1, L):
+            if j - i < MIN_LOOP + 1:
+                E[(i, j)] = zero
+    for span in range(MIN_LOOP + 2, L + 1):
+        for i in range(0, L - span + 1):
+            j = i + span - 1
+            best = E[(i + 1, j)].copy()                   # position i unpaired
+            for k in range(i + MIN_LOOP + 1, j + 1):      # i pairs with k
+                cand = E[(i + 1, k - 1)] + E[(k + 1, j)] + e[code[:, i], code[:, k]]
+                np.minimum(best, cand, out=best)
+            E[(i, j)] = best
+    return E[(0, L - 1)]
+
+
+def _sum_random(code: np.ndarray, e: np.ndarray) -> np.ndarray:
+    """The same energies summed over the same position pairs. No minimisation."""
+    n, L = code.shape
+    out = np.zeros(n, dtype=np.float32)
+    for i in range(L):
+        for k in range(i + MIN_LOOP + 1, L):
+            out += e[code[:, i], code[:, k]]
+    return out
+
+
+def _mfe(seqs) -> np.ndarray:
+    """Real ViennaRNA MFE of each sequence, as RNA."""
+    import RNA
+
+    return np.array([RNA.fold(str(q).upper().replace("T", "U"))[1]
+                     for q in seqs], dtype=np.float32)
+
+
+def random_folds(table_seeds=(0, 1, 2), model_seeds=(41,), verbose=True):
+    """Three controls for the folding gain, each holding something different fixed.
+
+    `random fold` / `random sum` share one random energy table and differ only
+    in the operator, which isolates the combinatorial minimisation. But a random
+    table is not a faithful stand-in for a real one: its out-of-fold linear
+    recoverability runs 0.39 to 0.86 against the real column's 0.316, because a
+    random table usually has one dominant pair type and the minimum collapses to
+    counting it. So the load-bearing control is the third.
+
+    `shuffled fold` applies **one fixed permutation of the twenty positions** to
+    every guide and folds the result with real ViennaRNA. Same algorithm, same
+    energy model, same value distribution, same non-linearity, still a
+    deterministic function of the guide -- but the structure it reports is not
+    the structure of the sgRNA that was actually transcribed. It is conservative
+    on purpose: shuffling preserves base composition, so whatever part of the
+    gain is composition-driven foldability survives in the control and only the
+    position-specific structure is removed.
+    """
+    X, y, names, protos = _base()
+    seqs20 = np.array([str(p)[:20].upper().ljust(20, "A") for p in protos])
+    chars = np.array([list(q) for q in seqs20])
+    code = np.searchsorted(BASES, chars)
+
+    base_rho, base_sd = _cv(X, y, seeds=model_seeds)
+    rows = [dict(arm="base", kind="base", n_cols=0, table_seed=-1,
+                 spearman=base_rho, spearman_sd=base_sd, d_spearman=0.0)]
+    if verbose:
+        print(f"  base: rho {base_rho:.4f}", flush=True)
+
+    def add(label, kind, cols, ts=-1):
+        cols = np.asarray(cols, dtype=np.float32)
+        if cols.ndim == 1:
+            cols = cols[:, None]
+        rho, sd = _cv(np.hstack([X, cols]), y, seeds=model_seeds)
+        rows.append(dict(arm=label, kind=kind, n_cols=cols.shape[1],
+                         table_seed=ts, spearman=rho, spearman_sd=sd,
+                         d_spearman=rho - base_rho))
+        if verbose:
+            print(f"  {label:38s}: rho {rho:.4f}  d {rho - base_rho:+.4f}",
+                  flush=True)
+        pd.DataFrame(rows).to_csv(FOLDS_OUT, index=False)
+
+    # The published columns, re-measured on these exact folds.
+    vb, fnb = _block("b_energy", protos)
+    add("real eng.dg.guide_selffold", "real",
+        vb[:, list(fnb).index("eng.dg.guide_selffold")])
+    v, _ = _block("c_folding", protos)
+    add("real c_folding block", "real", v)
+
+    # The same quantity recomputed here, so the control shares its code path.
+    mfe_real = _mfe(seqs20)
+    add("spacer MFE, recomputed", "real", mfe_real)
+
+    for ts in table_seeds:
+        rng = np.random.default_rng(9000 + ts)
+        perm = rng.permutation(20)
+        shuf = np.array(["".join(r) for r in chars[:, perm]])
+        add(f"shuffled-position MFE (perm {ts})", "shuffled fold",
+            _mfe(shuf), ts)
+
+    for ts in table_seeds:
+        rng = np.random.default_rng(7000 + ts)
+        e = _random_pair_table(rng)
+        add(f"random-energy fold (table {ts})", "random fold",
+            _fold_random(code, e), ts)
+        add(f"random-energy sum (table {ts})", "random sum",
+            _sum_random(code, e), ts)
+
+    out = pd.DataFrame(rows)
+    if verbose:
+        print("\n  mean gain by kind:")
+        for kind, g in out[out.kind != "base"].groupby("kind"):
+            print(f"    {kind:16s}: {g.d_spearman.mean():+.4f}  "
+                  f"({', '.join(f'{v:+.4f}' for v in g.d_spearman)})")
+        print(f"written -> {FOLDS_OUT}")
+    return out
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

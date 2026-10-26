@@ -243,15 +243,115 @@ def cas9_reference(seeds=(41, 42, 43), n_splits=None, verbose: bool = True):
     return row
 
 
+
+
+# --------------------------------------------------------------------------
+# Is the CRISPRi null a null about *binding*, or about *phenotype*?
+# --------------------------------------------------------------------------
+# Finding 5 reads the CRISPRi null as localising the flank effect to the
+# cleavage step: the same features are worth +0.157 on a cutting screen and
+# -0.009 here, so binding- and accessibility-limited accounts are excluded.
+#
+# That inference assumes the two screens differ only in whether a cut is made.
+# They do not. A Cas9 depletion screen scores a guide by whether its cells die,
+# which works at any locus. A CRISPRi screen scores a guide by the growth change
+# from knocking a gene *down*, which requires that the gene be expressed and
+# that its level matter. Where it does not, the guide scores ~0 however well
+# dCas9 bound -- and the label says that is most of this cohort: essential-gene
+# guides have a label sd of 2.886 against 1.133 for non-essential ones, and
+# 85% of the cohort is non-essential.
+#
+# So the CRISPRi null could be a null about the *phenotypic channel* rather than
+# about binding, and Finding 5 cannot tell the two apart as it stands. The test:
+# re-run the same arm inside the subset where knockdown definitely has a
+# phenotype. If the flank effect appears among essential genes, the localisation
+# claim is confounded; if it is still absent where the dynamic range is 2.5x
+# larger, the claim survives a test it had not faced.
+ESS_OUT = config.RESULTS / "cui_essentiality_split.csv"
+
+
+def essentiality_split(seeds=(41, 42, 43), n_splits=None, verbose: bool = True):
+    from .run_ablation import cross_validate
+
+    n_splits = n_splits or config.N_SPLITS
+    X, meta = build(verbose=verbose)
+    X = np.asarray(X, dtype=np.float32)
+    y = np.asarray(meta["y"], dtype=float)
+    names = list(meta["names"])
+    n_base = int(meta["n_base"])
+    gene = np.asarray([g if isinstance(g, str) else "" for g in meta["gene"]],
+                      dtype=object)
+    ess = np.asarray([str(e) for e in meta["essential"]], dtype=object)
+    has_gene = (gene != "") & (gene != "nan") & (gene != "None")
+
+    left = np.asarray(meta["left"], dtype=float)
+    # Essential genes are spatially clustered in E. coli -- ribosomal operons
+    # above all -- and in a CRISPRi screen the locus largely sets the phenotype.
+    # Flank composition is autocorrelated over kilobases, so holding out whole
+    # genes does not stop a model learning "this GC signature is the ribosomal
+    # region, where knockdown is lethal" and carrying it to a held-out gene next
+    # door. Grouping by 100 kb block is the control that does, and it is the one
+    # the rest of the project uses for exactly this risk.
+    block = np.floor_divide(left, 100_000).astype(int).astype(str)
+
+    rows = []
+    subsets = (("essential genes", has_gene & (ess == "True"), gene),
+               ("essential genes, 100kb blocks", has_gene & (ess == "True"), block),
+               ("non-essential genes", has_gene & (ess == "False"), gene),
+               ("all genic (reference)", has_gene, gene))
+    for label, sel, grouping in subsets:
+        if sel.sum() < 500:
+            continue
+        if verbose:
+            print(f"  {label}: {sel.sum():,} guides, label sd "
+                  f"{np.nanstd(y[sel]):.3f}, "
+                  f"{len(np.unique(grouping[sel])):,} groups", flush=True)
+        scores = {}
+        for arm, cols in (("base", slice(0, n_base)),
+                          ("base+a_flank", slice(0, X.shape[1])),
+                          ("a_flank_only", slice(n_base, X.shape[1]))):
+            res = cross_validate(
+                X[sel][:, cols], y[sel], names[cols],
+                ["arm"] * len(names[cols]), n_features=config.N_FEATURES,
+                seeds=list(seeds), n_splits=n_splits, verbose=False,
+                groups=grouping[sel],
+                tag=f"cui_ess_{label.split()[0]}_{arm.replace('+', '_')}",
+                experiment=arm)
+            scores[arm] = res["summary"]["spearman"]["mean"]
+            rows.append(dict(subset=label, arm=arm, n_rows=int(sel.sum()),
+                             label_sd=float(np.nanstd(y[sel])),
+                             spearman=scores[arm],
+                             spearman_sd=res["summary"]["spearman"]["sd"]))
+            if verbose:
+                print(f"    {arm:>14}: rho {scores[arm]:+.4f}", flush=True)
+            pd.DataFrame(rows).to_csv(ESS_OUT, index=False)
+        if verbose:
+            print(f"    -> family A delta {scores['base+a_flank'] - scores['base']:+.4f}",
+                  flush=True)
+
+    out = pd.DataFrame(rows)
+    if verbose:
+        print("\n  family A delta by subset:")
+        for label, g in out.groupby("subset"):
+            d = g.set_index("arm")["spearman"]
+            print(f"    {label:24s}: {d['base+a_flank'] - d['base']:+.4f}  "
+                  f"(a_flank alone {d['a_flank_only']:+.4f})")
+        print(f"written -> {ESS_OUT}")
+    return out
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--build", action="store_true")
     ap.add_argument("--run", action="store_true")
+    ap.add_argument("--essentiality", action="store_true")
     ap.add_argument("--cas9-reference", action="store_true")
     ap.add_argument("--force", action="store_true")
     a = ap.parse_args(argv)
-    if a.build or not (a.run or a.cas9_reference):
+    if a.build or not (a.run or a.cas9_reference or a.essentiality):
         build(force=a.force)
+    if a.essentiality:
+        essentiality_split()
     if a.run:
         run()
     if a.cas9_reference:
@@ -261,3 +361,4 @@ def main(argv=None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

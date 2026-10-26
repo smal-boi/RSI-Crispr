@@ -202,13 +202,20 @@ Measured, by linear regression on position-specific k-mer indicators: CRISPRoff
 
 **Zero information is not zero performance, and the distinction is the whole
 point.** Re-describing the guide in better coordinates is worth **+0.011 to
-+0.019** ρ to a depth-limited tree, agreed across three guide-only families —
-small, real, and not nothing: Noshay's 316 quantum columns beat every k-mer
++0.019** ρ to a depth-limited tree, on **two** independent guide-only
+measurements (`b_energy`'s and `c_folding`'s shares of it are the same spacer
+fold energy filed in two folders, Pearson 0.9993) — small, real, and not
+nothing: Noshay's 316 quantum columns beat every k-mer
 encoding of the same 20 bases by **+0.0114**, and of the 63 hand-named summary
 columns the 46 computable from the guide carry **+0.0065** while the 17 that need
 annotation carry **−0.0007**. So the families sort by **reach**, not by a
 delivered/undelivered line: **nothing confined to the 20-mer clears +0.019, and
-nothing worth more than +0.05 is confined to it.** Three more measurements close off the alternatives — the
+nothing worth more than +0.05 is confined to it.** That ordering is about what
+the model cannot already compute, not about what the phenotype depends on — set
+the increments beside each family's strongest *marginal* association and the
+latter is nearly flat, 0.12 to 0.18, with the single strongest column in the
+whole matrix being a guide-determined hybridisation energy at 0.184 (report,
+Part 2, *Further inferences about the process*). Three more measurements close off the alternatives — the
 champion has no feature left with residual correlation above 0.035, sixteen
 model classes span only 0.116 Spearman, and a CNN reading raw bases *ties* the
 engineered matrix on the guide (ρ 0.498 vs 0.527) while losing badly on the
