@@ -48,6 +48,8 @@ marked **[P]** published or **[C]** curated. They are not interchangeable.
 | 412 columns computable from any guide match all 6,232 | 0.00003 ρ | [P] | `portability.csv`, `portability_364.csv` | `python -m sgrna.portability`; `python -m sgrna.rederive --only portability_364` |
 | …but no reduced set is non-inferior on the curated cohort | −0.0118 / −0.0143 | [C] | `curated_ladder.csv` | `python -m sgrna.curated_ladder --no-select` |
 | A deterministic function of the guide adds no information, but does add performance | +0.011 to +0.019 | [C] | `no_information.csv`, `base_enrichment.csv` | `python -m sgrna.no_information`, `python -m sgrna.base_enrichment` |
+| …but **random** functions of the same shape add nothing | −0.0004 to −0.0015 at 4–256 tables | [C] | `redescription_random.csv` | `python -m sgrna.redescription --arm random` |
+| **Sorted by column rather than by family**: what the guide determines is worth +0.008, what it does not +0.201 | 24× | [C] | `redescription_taxonomy.csv`, `redescription_columns.csv` | `python -m sgrna.redescription --arm taxonomy` |
 | Noshay's quantum columns beat every k-mer encoding of the same bases | +0.0114 | [C] | `curated_ladder.csv` | `python -m sgrna.curated_ladder` |
 | Of the 63 hand-named columns, the computable 46 carry the gain | +0.0065 vs −0.0007 | [C] | `handnamed_split.csv` | `python -m sgrna.handnamed_split` |
 | `d_mechanics`'s gain is flanking DNA, not re-description | +0.097 of +0.099 | [C] | `no_information.csv`, `d_mechanics_reconstructibility.csv` | `python -m sgrna.no_information`; `python -m sgrna.rederive --only d_mechanics_reconstructibility` |

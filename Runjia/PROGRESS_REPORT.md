@@ -160,7 +160,18 @@ measured four independent ways — quantum tables **+0.0114**, `b_energy`
 (CRISPRoff on the 23-mer) **+0.019**, `c_folding` (ViennaRNA on the spacer and
 its scaffold) **+0.014**, `d_mechanics`'s protospacer half **+0.011**, the
 hand-named 46 **+0.0065**. The consistency across four families is the result,
-and it puts the effect at about **+0.015**. None of it is a feature-selection
+and it puts the effect at about **+0.015**.
+
+**"Better" is carrying that sentence, and it was tested.** If the mechanism were
+simply that a depth-limited tree cannot cheaply compute a sum of position-wise
+terms, then *any* such sum would pay and the content would not matter. It does
+not: adding 4, 16, 64 or 256 **random** position-weight tables — structurally
+identical to a nearest-neighbour energy sum, with the physics replaced by noise
+— is worth **−0.0004, −0.0004, −0.0002 and −0.0015** on the curated base, three
+independent draws each. Nothing at every count, and enough of them begin to cost.
+So the hundredth belongs to the *particular* functions and not to re-description
+as a class: the physics is doing the work and the packaging is only how it is
+delivered (Appendix B). None of it is a feature-selection
 artefact: on the full `d_mechanics` arm, using every column rather than selecting
 300 gives the same gain, **+0.0993 against +0.0988**
 (`results/selector_control.csv`).
@@ -250,6 +261,13 @@ base **with** family A, eight model classes span **0.1076 ρ** against 0.116 for
 sixteen without it, so adding the one family that matters does not widen the gap
 between model classes at all.
 
+**And the family is the wrong unit for any of this.** Sorting all 668 family
+columns by how much of each the guide itself explains, rather than by which
+folder they came in, gives the cleanest statement this project has of where its
+performance lives: columns the guide determines are worth **+0.008**, columns it
+does not are worth **+0.201**, and the ratio is twenty-four to one
+(Appendix B).
+
 *Limit:* "non-inferior by 0.005" was the claim, not "identical" — higher-order
 k-mers do carry a little, which is Finding 7.
 
@@ -279,6 +297,45 @@ long-range autocorrelation and breaks only the correspondence (Appendix A):
 At 1 kb the shifted columns are still 0.41 correlated with the real ones and only
 8% of the gain survives; by 10 kb the gain is gone. So this is not an artefact of
 chromosome-scale structure, and the effect is sharply localised.
+
+**And the mechanism it points at, as a hypothesis.** The size and the
+locality above say what the effect is; they do not say why flanking DNA
+should matter at all. The account this project works with, and the one test
+that could have embarrassed it:
+
+*Mechanism, as a hypothesis.* Target GC correlates **−0.201** with the score;
+the effect survives a change of enzyme and of organism; and the model run
+backwards prefers GC-poor targets (35% against a 51% mean). That is consistent
+with a duplex-opening step limited by local GC. **It is not an intervention** —
+the assay measures depletion, not cutting — so it is stated as a hypothesis, and
+distinguishing a strand-invasion-limited from a hybridisation-limited step would
+need kinetic data.
+
+**The GC account survives conditioning, which is the test that matters**
+(`gcstrata.py`). Flank GC's *marginal* association with the label is weak —
++0.044 for the ±500 nt mean, and no flank GC column at any window exceeds +0.051
+(Spearman) or +0.079 (Pearson). But target GC is a **suppressor**: it correlates
+−0.201 with the label and +0.176 with flank GC, so it masks the flank term.
+Partialling it out *raises* flank GC's association to **+0.082** — double the
+marginal value — and the sign is positive in all five target-GC strata.
+
+The full ablation inside each stratum, where target composition is near-constant
+by construction:
+
+| target GC | n | baseline ρ | + family A | Δ |
+|---|---:|---:|---:|---:|
+| 0.20–0.40 | 2,776 | 0.3353 | 0.4630 | **+0.128** |
+| 0.40–0.50 | 2,776 | 0.4045 | 0.4797 | +0.075 |
+| 0.50–0.55 | 2,775 | 0.4627 | 0.5221 | +0.059 |
+| 0.55–0.60 | 2,776 | 0.4760 | 0.5220 | +0.046 |
+| 0.60–0.85 | 2,776 | 0.4443 | 0.5023 | +0.058 |
+
+**Family A is not target GC in disguise** — it is worth between +0.046 and +0.128
+inside every stratum. *Limit:* the gain is largest where the target is GC-poor,
+but it is **not monotone** (the top stratum rises again), and it covaries with
+headroom — the GC-poor stratum has the lowest baseline and so the most room to
+gain. So the ordering is an observation, not a dose-response curve, and it should
+not be read as quantitative support for the duplex-opening account.
 
 ### 4. It is a gradient, not a motif
 
@@ -476,40 +533,6 @@ is a different enzyme, library, assay and laboratory at once, so a null has many
 possible authors; what makes it interpretable is that the *base* predicts 0.458
 on the same rows, so the pipeline plainly works on this screen and the null
 belongs to family A rather than to the run.
-
-*Mechanism, as a hypothesis.* Target GC correlates **−0.201** with the score;
-the effect survives a change of enzyme and of organism; and the model run
-backwards prefers GC-poor targets (35% against a 51% mean). That is consistent
-with a duplex-opening step limited by local GC. **It is not an intervention** —
-the assay measures depletion, not cutting — so it is stated as a hypothesis, and
-distinguishing a strand-invasion-limited from a hybridisation-limited step would
-need kinetic data.
-
-**The GC account survives conditioning, which is the test that matters**
-(`gcstrata.py`). Flank GC's *marginal* association with the label is weak —
-+0.044 for the ±500 nt mean, and no flank GC column at any window exceeds +0.051
-(Spearman) or +0.079 (Pearson). But target GC is a **suppressor**: it correlates
-−0.201 with the label and +0.176 with flank GC, so it masks the flank term.
-Partialling it out *raises* flank GC's association to **+0.082** — double the
-marginal value — and the sign is positive in all five target-GC strata.
-
-The full ablation inside each stratum, where target composition is near-constant
-by construction:
-
-| target GC | n | baseline ρ | + family A | Δ |
-|---|---:|---:|---:|---:|
-| 0.20–0.40 | 2,776 | 0.3353 | 0.4630 | **+0.128** |
-| 0.40–0.50 | 2,776 | 0.4045 | 0.4797 | +0.075 |
-| 0.50–0.55 | 2,775 | 0.4627 | 0.5221 | +0.059 |
-| 0.55–0.60 | 2,776 | 0.4760 | 0.5220 | +0.046 |
-| 0.60–0.85 | 2,776 | 0.4443 | 0.5023 | +0.058 |
-
-**Family A is not target GC in disguise** — it is worth between +0.046 and +0.128
-inside every stratum. *Limit:* the gain is largest where the target is GC-poor,
-but it is **not monotone** (the top stratum rises again), and it covaries with
-headroom — the GC-poor stratum has the lowest baseline and so the most room to
-gain. So the ordering is an observation, not a dose-response curve, and it should
-not be read as quantitative support for the duplex-opening account.
 
 **Does cleavage-specificity make the predictor useless for real editing work?**
 It is the first thing to ask after the dCas9 result, and the answer turns on
@@ -1422,7 +1445,7 @@ cost, because the cost was not small.
 | the mechanism | a dCas9 **CRISPRi** screen, the last untouched dataset, could have shown the flank effect to be about binding or accessibility rather than cleavage. Family A adds **−0.009** there against **+0.157** on the cutting screen, flank-only 0.133 against 0.341 — so the effect is specific to cutting (Finding 5) |
 | the flanking-context thesis | the family table on the curated cohort sorts by **how far outside the 20-mer a family can see**: nothing confined to the guide clears +0.019, nothing above +0.05 is confined to it. Arrived at by withdrawing a claim that pointed the other way (Appendix B3) |
 
-### What it cost — thirteen claims withdrawn in nineteen days
+### What it cost — fourteen claims withdrawn in twenty days
 
 | withdrawn | replaced by |
 |---|---|
@@ -1434,6 +1457,7 @@ cost, because the cost was not small.
 | "eSpCas9 is the designated **untouched** final evaluation, to be evaluated once" | it had already been used for four feature arms across three seeds and two CV schemes. Confirmatory, not untouched; "once" was never available (Part 4, Finding 12) |
 | "SLICER beats crisprHAL 2" | **parity.** Δρ +0.0021, 95% CI [−0.0031, +0.0072] on their eSpCas9 split, +0.005 on their SpCas9 split. The lead at 26,853 training guides is +0.0133 and vanishes at 47,591 — a small-data claim, not a ranking |
 | "427 columns are non-inferior, so the matrix holds non-sequence information" | the 46 of those columns computable from the 20-mer carry the whole gain (+0.0065) and the 17 that are not carry none (−0.0007). The 427 result is re-description, not outside information |
+| "a feature can add no information and still add performance — representation beats information" | too strong. **Random** position-weight tables, structurally identical to the physical ones, buy **−0.0004 to −0.0015** at 4 to 256 of them. The hundredth belongs to the particular functions, not to re-description as a class, so the physics is doing the work and the packaging only delivers it |
 | "non-inferior against a **pre-declared** 0.005 ρ margin" and "inside the **pre-declared** ±0.01" | neither margin was pre-declared. The commits put the 0.005 margin **seven days** after the result it judges and the ±0.01 margin **54 minutes** after. Both are defensible margins and neither was tuned to a verdict, but the word asserted an auditable timeline that the repository contradicts. Replaced throughout by the smallest margin the data support — 0.0072 for the head-to-head, 0.0054 for the reduction — which needs no declaration (Appendix B) |
 | "no inflation is detectable; the adaptive component is not larger than about 0.02" | **it is +0.0087 [+0.0020, +0.0153]**, from fifteen sealing draws instead of three. The original was the right reading of an underpowered design and the wrong conclusion: a point estimate of zero from three draws, against a reference arm whose own gap swings ±0.015, is not evidence of zero |
 | "ridge on the raw 6,232 collapses to 0.423 from collinearity" | only at a fixed penalty. `RidgeCV` reaches **0.4945**, so the reduced basis helps a linear model by +0.009 rather than +0.071. The 95.6%-of-boosting figure on 427 columns is unaffected, and so is the additivity claim that rests on it |
@@ -2356,6 +2380,81 @@ what makes the comparison informative: boosting may use interactions and ridge
 cannot, so the gap measures **how much of the accuracy needs interactions at
 all**. About 4% — which is why the account in Findings 3 and 4 can be read off
 the model as a set of per-column effects rather than inferred from attributions.
+
+### Is re-description worth anything, or only the *right* re-description?
+
+Finding 2 reports that a deterministic function of the 20-mer adds no
+information but buys a depth-limited tree one to two hundredths of ρ, agreed
+across four families. The proposed mechanism — the tree cannot cheaply compute a
+sum of position-wise terms, so handing it one precomputed pays — has a sharp
+consequence nobody had tested: **the function would not have to mean anything.**
+Any deterministic summary packaging a higher-order effect should do. And since
+performance cannot rise without bound by bolting on arbitrary functions, the
+effect has a size and a saturation point.
+
+**It has neither, because it is zero.** `redescription.py` builds functions
+structurally identical to the physical ones and semantically empty: a random
+weight per (position, base), summed over the guide — exactly the shape of a
+nearest-neighbour energy sum with the physics replaced by noise. Three
+independent draws of tables at each count, two model seeds each, added to the
+curated base:
+
+| random tables added | mean Δρ | range across three draws |
+|---:|---:|---|
+| 4 | −0.0004 | −0.0006 to −0.0002 |
+| 16 | −0.0004 | −0.0007 to +0.0002 |
+| 64 | −0.0002 | −0.0010 to +0.0006 |
+| 256 | **−0.0015** | −0.0021 to −0.0010 |
+| *for comparison, the physical families* | *+0.011 to +0.019* | |
+
+**Nothing, at every count, and at 256 it starts to cost** — enough useless
+columns begin to crowd the 300-column budget. So the gain is **not** a property
+of re-description as a class. It belongs to the particular functions, which
+means the physics is doing the work and the repackaging is only how the work
+gets delivered. "Representation beats information" was too strong: the honest
+version is that a *well-chosen* deterministic summary pays a constrained learner
+about a hundredth, and choosing it well is domain knowledge, not formatting.
+
+*Limit:* the random tables are linear sums over position-specific weights, which
+is exactly the class `b_energy`, `d_mechanics` and the quantum tables live in. A
+random *non-linear* function — the analogue of `c_folding`'s RNA folding — was
+not tested, so the null covers the class that produced three of the four
+measurements and not the fourth.
+
+### Columns sorted by what the guide determines, instead of by family
+
+A family is a folder, not a kind. `d_mechanics` bundles 22 columns that restate
+the guide with 8 that read flanking DNA, and its family-level Δρ hides the split
+(Finding 2). So the taxonomy was rebuilt at the column level: regress **all 668
+family columns** on the guide's own one-hot encoding (20×4 mono + 19×16 di = 384
+predictors), out of fold, and sort by how much of each column the guide explains
+(`redescription.py --arm taxonomy`, `results/redescription_columns.csv`).
+
+| | columns | Δρ over the curated base |
+|---|---:|---:|
+| **linearly recoverable from the guide** (R² ≥ 0.99) | 18 | **+0.0083** |
+| partly recoverable (0.50 < R² < 0.99) | 48 | +0.0197 |
+| **not linearly recoverable** (R² ≤ 0.50) | 602 | **+0.2012** |
+| all 668 together | 668 | +0.2027 |
+
+**Everything the guide determines is worth +0.008; everything it does not is
+worth +0.20** — a factor of twenty-four, measured without reference to anyone's
+choice of folder. The sum of the three parts (+0.229) exceeds the joint arm
+(+0.203), which is the same overlap the family table shows.
+
+The classification also checks itself against two known cases: 13 of
+`d_mechanics`'s 30 columns come back as guide-determined and 10 as outside,
+against the 22/8 split measured a different way in Finding 2; and all 320
+surviving `a_flank` columns and all 152 of `i_shape` land outside, as they must.
+
+*What the probe measures, and what it does not.* It measures **linear**
+recoverability from mono- and dinucleotide indicators, which is a lower bound on
+determinism and a reasonable proxy for *cheapness* to a depth-limited tree — the
+quantity the mechanism in Finding 2 is actually about. It is not a test of
+whether a column is a function of the guide: `c_folding` is deterministic in the
+guide and all seven of its columns land in the "not linearly recoverable" group,
+because RNA folding is not a linear sum. Read the groups as *cheap*, *partly
+cheap* and *not cheap*, not as *determined* and *free*.
 
 ### Does the human baseline reproduce ρ 0.472, and what produces it?
 
@@ -3368,7 +3467,7 @@ against Crossref metadata rather than transcribed from memory.
 
 ## Appendix E — Withdrawn claims
 
-Thirty-three claims have been withdrawn and fourteen bugs found. They are not listed
+Thirty-four claims have been withdrawn and fourteen bugs found. They are not listed
 here, so that this document reads as a statement rather than a diary; they are in
 `docs/FINDINGS_LOG.md` in date order and in `local/MISCONCEPTIONS.md`, outside
 the repo, with the cause of each.

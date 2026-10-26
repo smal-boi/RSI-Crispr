@@ -4891,3 +4891,78 @@ distinct numbers dropped.**
 
 Also: `numcheck` no longer reads a commit hash as a number (`136755f` was
 parsing as 136755).
+
+---
+
+## 26 October 2026 — random re-descriptions buy nothing, and the family is the wrong unit
+
+Two experiments from one question: if re-description helps because a
+depth-limited tree cannot cheaply compute a sum of position-wise terms, then the
+function need not mean anything — so how big is the effect, and where does it
+saturate?
+
+### It does not saturate, because it is zero
+
+`redescription.py --arm random`. Functions built to be structurally identical to
+the physical ones and semantically empty: a random weight per (position, base),
+summed over the guide — a nearest-neighbour energy sum with the physics replaced
+by noise. Three independent draws per count, two model seeds each:
+
+| random tables added | mean Δρ | range |
+|---:|---:|---|
+| 4 | −0.0004 | −0.0006 to −0.0002 |
+| 16 | −0.0004 | −0.0007 to +0.0002 |
+| 64 | −0.0002 | −0.0010 to +0.0006 |
+| 256 | **−0.0015** | −0.0021 to −0.0010 |
+
+**Nothing at every count, and at 256 it starts to cost** as useless columns crowd
+the 300-column budget. Against +0.011 to +0.019 for the physical families.
+
+So "a feature can add no information and still add performance — representation
+beats information" is **too strong, and is withdrawn** (the fourteenth). The
+hundredth belongs to the *particular* functions, not to re-description as a
+class: the physics does the work and the packaging only delivers it. Choosing
+the right summary is domain knowledge, not formatting.
+
+*Limit:* the random tables are linear sums over position weights, which is the
+class `b_energy`, `d_mechanics` and the quantum tables occupy. A random
+*non-linear* function — the analogue of `c_folding` — was not tested, so the null
+covers three of the four measurements and not the fourth.
+
+### Columns sorted by what the guide determines, not by folder
+
+A family is a folder, not a kind — `d_mechanics` bundles 22 guide-restating
+columns with 8 that read flanking DNA, and the family average hides it. So all
+**668** family columns were regressed on the guide's own one-hot encoding
+(20×4 mono + 19×16 di), out of fold, and sorted by R²:
+
+| | columns | Δρ over the curated base |
+|---|---:|---:|
+| linearly recoverable from the guide (R² ≥ 0.99) | 18 | **+0.0083** |
+| partly recoverable | 48 | +0.0197 |
+| not linearly recoverable (R² ≤ 0.50) | 602 | **+0.2012** |
+| all 668 | 668 | +0.2027 |
+
+**What the guide determines is worth +0.008; what it does not is worth +0.20.**
+Twenty-four to one, with no appeal to anyone's choice of folder — and the sum of
+the parts (+0.229) exceeding the joint arm (+0.203) is the same overlap the
+family table shows.
+
+It checks itself on two known cases: 13 of `d_mechanics`'s 30 come back
+guide-determined and 10 outside, against the 22/8 split measured another way;
+and every surviving `a_flank` and `i_shape` column lands outside, as it must.
+
+*What the probe measures:* **linear** recoverability from mono+di, a lower bound
+on determinism and a proxy for *cheapness* to a depth-limited tree — which is the
+quantity the mechanism is about. `c_folding` is deterministic in the guide and
+all seven of its columns land outside, because RNA folding is not a linear sum.
+Read the groups as cheap / partly cheap / not cheap.
+
+### Also, flow
+
+Finding 5 had grown to 177 lines and ended on a GC-strata ablation, which is
+mechanism rather than transfer. The duplex-opening hypothesis and the conditional
+GC test moved to **Finding 3**, where the mechanism belongs: Finding 3 goes 27 →
+66 lines and now reads size → locality → mechanism → the test that could have
+embarrassed it; Finding 5 drops to 143 and is transfer plus controls. Audited:
+no number lost in the move.
