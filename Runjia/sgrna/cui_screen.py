@@ -270,6 +270,20 @@ def cas9_reference(seeds=(41, 42, 43), n_splits=None, verbose: bool = True):
 ESS_OUT = config.RESULTS / "cui_essentiality_split.csv"
 
 
+def _slug(label: str) -> str:
+    """A checkpoint tag that distinguishes every arm.
+
+    `cross_validate` resumes from `results/folds_<tag>.csv` and skips folds it
+    has already recorded, so two arms sharing a tag silently return the *first*
+    arm's numbers. The first version of this took `label.split()[0]`, which gave
+    "essential" for both "essential genes" and "essential genes, 100kb blocks" --
+    and the block-grouped arm duly reported the gene-grouped result to four
+    decimal places. Identical numbers under two different groupings is the only
+    reason it was caught.
+    """
+    return "".join(c if c.isalnum() else "_" for c in label).strip("_")
+
+
 def essentiality_split(seeds=(41, 42, 43), n_splits=None, verbose: bool = True):
     from .run_ablation import cross_validate
 
@@ -315,7 +329,7 @@ def essentiality_split(seeds=(41, 42, 43), n_splits=None, verbose: bool = True):
                 ["arm"] * len(names[cols]), n_features=config.N_FEATURES,
                 seeds=list(seeds), n_splits=n_splits, verbose=False,
                 groups=grouping[sel],
-                tag=f"cui_ess_{label.split()[0]}_{arm.replace('+', '_')}",
+                tag=f"cui_ess_{_slug(label)}_{arm.replace('+', '_')}",
                 experiment=arm)
             scores[arm] = res["summary"]["spearman"]["mean"]
             rows.append(dict(subset=label, arm=arm, n_rows=int(sel.sum()),

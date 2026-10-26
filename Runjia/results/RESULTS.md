@@ -57,6 +57,8 @@ marked **[P]** published or **[C]** curated. They are not interchangeable.
 | The folding gain is the **real structure**: position-shuffled folds are a null | +0.0119 vs −0.0002 over 3 permutations | [C] | `redescription_folds.csv` | `python -m sgrna.redescription --arm folds` |
 | `d_mechanics`'s outside half is provenance, not non-linearity | 8 flank cols +0.0968; 2 guide-only +0.0019 | [C] | `redescription_provenance.csv` | `python -m sgrna.redescription --arm provenance` |
 | Chi sites are indistinguishable from any GC-matched octamer — the RecBCD repair route is excluded | 41st percentile of 200 controls | [C] | `chi_sites.csv` | `python -m sgrna.chi_sites` |
+| **The dCas9 null does not localise the effect to cleavage**: inside the CRISPRi screen's essential genes family A is worth +0.27 | +0.2679 (100 kb blocks), +0.2749 (gene-grouped) vs −0.0101 non-essential | [C] | `cui_essentiality_split.csv` | `python -m sgrna.cui_screen --essentiality` |
+| Flank GC conditioning, re-measured on the curated cohort | +0.176 marginal → +0.221 partial; positive in all 5 strata | [C] | `gc_strata_corr_curated.csv` | `python -m sgrna.gcstrata --corr --cohort curated` |
 | Flank GC's marginal association is 3.6× stronger on the curated cohort than the published one | +0.161 vs +0.044 | [C] | — (`gcstrata.py` is pre-pivot) | `python -m sgrna.gcstrata --corr` |
 | Noshay's quantum columns beat every k-mer encoding of the same bases | +0.0114 | [C] | `curated_ladder.csv` | `python -m sgrna.curated_ladder` |
 | Of the 63 hand-named columns, the computable 46 carry the gain | +0.0065 vs −0.0007 | [C] | `handnamed_split.csv` | `python -m sgrna.handnamed_split` |

@@ -252,7 +252,7 @@ LightGBM**; the frozen XGBoost numbers above stay as the historical baseline.
 
 | file | what it is for |
 |---|---|
-| [`docs/PROGRESS_REPORT.md`](PROGRESS_REPORT.md) | **start here** — the whole project for an outside reader: the twelve findings and the evidence for each, how it compares to published work, what is original rather than imported, where it stops, and the controls in the appendices, with a glossary and a guide to reading the statistics |
+| [`docs/PROGRESS_REPORT.md`](PROGRESS_REPORT.md) | **start here** — the whole project for an outside reader: the seven findings and the evidence for each, how it compares to published work, what is original rather than imported, where it stops, and the controls in the appendices, with a glossary and a guide to reading the statistics |
 | [`results/RESULTS.md`](results/RESULTS.md) | **claim → evidence index**: for every claim the report makes, the file that backs it and the command that produced it, including the thirteen files whose producer is no longer in the repo |
 | [`results/RESULTS_archive_2026-10-10.md`](results/RESULTS_archive_2026-10-10.md) | the long-form commentary as it stood on 10 October 2026, kept verbatim — nulls, tangents and all |
 | `docs/qna_archive.md` | *(local only)* questions asked, answered and closed without moving a number — kept for conference Q&A, deliberately not in the report |
