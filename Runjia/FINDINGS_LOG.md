@@ -4828,3 +4828,66 @@ rather than over the old one.
 the two mis-citations it fixed — "cited `additivity_reduced.csv` for
 −0.0118/−0.0143" and "cited to `asymmetry_strand_audit.csv`" — so the checker
 flags them again. A checker that did not would be ignoring quoted text.
+
+---
+
+## 26 October 2026 — "pre-declared" was not, and Finding 2 rebuilt
+
+### The margin audit, and what replaces a margin
+
+The objection is right and the repository settles it rather than leaving it to
+trust: a margin asserted as "pre-declared" is unverifiable unless the assertion
+is timestamped, and ours were not.
+
+| claim | result first exists | margin first appears | gap |
+|---|---|---|---|
+| 427 columns non-inferior, 0.005 ρ | 4 Oct (`136755f`) | 11 Oct (`0f66a2e`) | **7 days after** |
+| parity with crisprHAL 2, ±0.01 ρ | 15 Oct 19:13 (`6e2f32d`) | 15 Oct 20:07 (`872e2d4`) | **54 minutes after** |
+
+Nothing was fabricated and neither margin was tuned to produce a verdict — but
+the word asserted a timeline the commits contradict. Withdrawn, the thirteenth.
+
+**What replaces it is the bound, not another margin.** The smallest margin the
+data support is just the larger end of the interval, and it cannot be gamed by
+when anyone wrote anything down:
+
+| claim | interval | equivalence holds at any margin ≥ |
+|---|---|---:|
+| SLICER vs crisprHAL 2, ρ | [−0.0031, +0.0072] | **0.0072** |
+| the same, Kendall τ | [−0.0024, +0.0073] | 0.0073 |
+| the same, Pearson | [−0.0066, +0.0030] | 0.0066 |
+| the same, R² | [−0.0103, +0.0041] | **0.0103** |
+| 427 columns against 6,232 | [−0.0008, +0.0054] | 0.0054 |
+
+That table also exposes what a flat ±0.01 hid: **on R² the data do not support
+equivalence at 0.01** — they need 0.0103. The rank metrics do, with room.
+
+For the next organism: commit the margin, in code, before the result file
+exists, and cite the hash. Then `git log -S` settles it in one command, as it
+did here. Until that is done, report the bound.
+
+### Finding 2 rebuilt around the inventory
+
+The section had grown by accretion and read as a pile of results. Rewritten to
+build in one direction — **inventory → layers → the two questions it answers**:
+
+1. the matrix partitions exactly: 5,853 indicators + 316 quantum + 63 hand-named;
+2. layer one, 74 columns are a lossless encoding, recovering 96.4% / 95.4%;
+3. layer two, the k-mer ladder — trimers +0.0023, tetramers −0.0019, and the one
+   step that should buy nothing and buys +0.0114;
+4. layer three, the 63 hand-named, of which only two need annotation and the
+   computable 46 carry the whole +0.0065;
+5. so ~20 variables in three spellings, and re-description is worth ~+0.015;
+6. **then the payoff, as two questions that had been conflated**:
+   **selection** — 300 of 6,169 costs ±0.0005, parity, true on both cohorts; and
+   **reduction** — 412 columns land 0.00003 from all 6,232 on the published
+   matrix but every reduced representation falls short on the curated one.
+
+Separating those two is what makes the section hold together: "a greatly reduced
+*selection* is at parity" and "a greatly reduced *representation* is not" are
+both true, and the earlier version slid between them. Audited token by token
+against the previous text — **189 lines against 197, and not one of the 119
+distinct numbers dropped.**
+
+Also: `numcheck` no longer reads a commit hash as a number (`136755f` was
+parsing as 136755).

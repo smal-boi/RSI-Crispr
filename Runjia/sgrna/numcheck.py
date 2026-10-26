@@ -50,7 +50,9 @@ def section_of(doc, line_no, offsets):
             name = label
     return name
 
-NUM = re.compile(r"(?<![\w.])([+-]?\d+(?:,\d{3})*(?:\.\d+)?)(?![\d])")
+# A digit run followed by a letter is a commit hash or an identifier, not a
+# measurement, so `136755f` must not read as 136755.
+NUM = re.compile(r"(?<![\w.])([+-]?\d+(?:,\d{3})*(?:\.\d+)?)(?![\d\w])")
 FILE = re.compile(r"`([A-Za-z0-9_.\-]+\.(?:csv|json))`")
 # lines that are references, URLs or code, not claims
 SKIP_LINE = re.compile(r"https?://|doi\.org|^\s*[|]?\s*`?python |^\s{4}")

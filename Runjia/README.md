@@ -26,7 +26,8 @@ five folds; **0.6985** on crisprHAL 2's own held-out partition against the
 **Against the state of the art: parity at a fraction of the cost.** On
 crisprHAL 2's **own two published splits**, evaluated against their own published
 weights, SLICER is statistically equivalent to it — Δρ **+0.0021**, 95% CI
-[−0.0031, +0.0072] on eSpCas9 (inside a pre-declared ±0.01 margin) and +0.005 on
+[−0.0031, +0.0072] on eSpCas9 — equivalence at any margin from 0.0072 up, with no
+margin needing to be declared — and +0.005 on
 SpCas9 — while reaching a given accuracy on about **half the labelled guides**.
 Our five folds take **69 s of wall-clock** against **105 min** for their
 CNN–BiGRU on the same machine — **92×**, or **~150×** counted in CPU-seconds
