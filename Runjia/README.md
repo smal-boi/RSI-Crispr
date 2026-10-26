@@ -149,7 +149,10 @@ host gene shows the weak relationship belongs to Noshay's 1,222-gene panel rathe
 than to the particular guides in it (β +5.4 inside the panel, +17.0 outside).
 Guo's panel is a part of the genome where the flank effect is weak, so +0.080 is
 the right figure for that panel and +0.164 the right one genome-wide — neither
-is an attenuated version of the other (`python -m sgrna.curation_variance`). Family A +0.164, `d_supercoiling` +0.139, `i_shape`
+is an attenuated version of the other (`python -m sgrna.curation_variance`).
+
+Family A +0.164 (**+0.156 on sealed genes** — see the adaptive-overfitting
+caveat below), `d_supercoiling` +0.139, `i_shape`
 +0.120, `d_mechanics` +0.099, `g_transcription` +0.058 ρ. Appendix B3 of the
 progress report has the caveats, which matter: these are single-family
 increments over a base starved of dense continuous columns, not estimates of
@@ -490,9 +493,13 @@ transcriptional one.
    development pool only, and differencing against a reference arm chosen
    elsewhere puts the automatable part at **+0.0087 ρ [+0.0020, +0.0153]** over
    **fifteen** sealing draws — 12 of 15 positive, t = 2.56, p = 0.022
-   (`python -m sgrna.sealed_holdout --seal-seeds ...`). Read ρ 0.7218 as about
-   0.009 optimistic, treat that as a **lower** bound since no re-derivation
-   reaches the human choices, and note that model-to-model comparisons on the
-   same folds cancel most of it. An earlier three-draw version reported
-   +0.0005 ± 0.016 and "no inflation detectable"; three draws could not resolve
-   a 0.009 effect against a reference arm whose own gap swings ±0.015.
+   (`python -m sgrna.sealed_holdout --seal-seeds ...`). **It lands on the
+   differences, not the levels**: absolute scores do not move detectably
+   (0.7043 in pool CV against 0.7077 sealed), while **family A's gain reads
+   +0.164 in cross-validation and +0.156 on genes the pipeline never saw**.
+   Treat that as a *lower* bound, since no re-derivation reaches the human
+   choices, and expect the margin over crisprHAL 2 on our own folds to carry it
+   too — our configuration was chosen on those rows and theirs was not, so it
+   does not cancel. An earlier three-draw version reported +0.0005 ± 0.016 and
+   "no inflation detectable"; three draws could not resolve a 0.009 effect
+   against a reference arm whose own gap swings ±0.015.

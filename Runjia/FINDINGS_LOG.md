@@ -4698,3 +4698,37 @@ was wrong about the cost and wrong about the worth.
 folds, zero difference to four decimals (f100 0.5203, f250 0.5247, f500 0.5214,
 f1000 0.5190). Twelve of the original thirteen orphan files are now reproducible
 from committed code; the only one left is the Colab GPU search.
+
+**Correction to the entry above, same day.** It said the component "applies to
+absolute curated figures — ρ 0.7218 should be read as carrying ~0.009 of
+self-inflation" and "applies much less to the comparisons, because a difference
+between two models on the same folds cancels most of a shared optimism." Both
+are backwards, and the same fifteen draws say so:
+
+| | pool CV | sealed genes | change |
+|---|---:|---:|---:|
+| base only (nothing chosen here) | 0.5396 | 0.5517 | +0.0121 |
+| frozen (the quoted configuration) | 0.7043 | 0.7077 | +0.0035 |
+| **the gain from the chosen configuration** | **0.1647** | **0.1560** | **−0.0087** |
+
+The **levels do not move** — the frozen arm's gap is −0.0035 with an interval
+containing zero, and the sealed genes are marginally *easier*. What moves is the
+**difference between arms**: family A reads **+0.164 in cross-validation and
++0.156 on genes no part of the pipeline has seen**.
+
+Cancellation needs both arms to have been chosen on the same rows. The base-only
+arm was not, so the optimism appears in full in the difference instead of
+subtracting out. By the same logic the **margin over crisprHAL 2 on our own five
+folds** carries it — our configuration was chosen on those rows, theirs was not —
+so +0.0161 to +0.0172 should be read as roughly **+0.008** on unseen genes. That
+is independently consistent with the +0.002 to +0.005 measured on *their*
+held-out splits, and it is a second contributor alongside the data-volume
+account rather than a replacement for it. The parity claim itself is untouched.
+
+**On the cost of the run, since it was queried:** 12 draws took 53 minutes
+(01:03–01:56), and re-running one draw today reproduces its three gaps to six
+decimals in 280 s wall / 1,579 s CPU — about 5.6 cores for under five minutes.
+The seqnet re-derivation before it took ~2.3 h, consistent with its own per-fold
+timings (111 s at flank 100 rising to ~900 s at 1,000, twenty folds). Total
+compute was about three hours, finishing at 01:56; the long wall-clock in the
+session came from polling, not from the jobs.

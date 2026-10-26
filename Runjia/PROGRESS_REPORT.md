@@ -264,7 +264,8 @@ k-mers do carry a little — see Finding 7.
 
 Windowed composition of the flanking DNA (GC, purine, longest run, quantum-table
 averages at 50/250/500/1,000 nt each side, plus the nearest 10 bases) is worth
-**+0.164 ρ** on the curated cohort we train on (+0.080 on the published matrix) —
+**+0.164 ρ** on the curated cohort we train on — **+0.156 measured on genes no
+step of the pipeline has seen** (Part 4), and +0.080 on the published matrix —
 larger than every other idea tested here combined, and it survives holding out
 whole genes, losing nothing beyond the 6% that grouping costs a feature which
 *cannot* be memorising a locus (Appendix B3). **Cas9 does not read this DNA**,
@@ -957,7 +958,8 @@ claimed and the reason several imported biophysical families could not have
 helped (Findings 1–2; Appendices B2, B3).
 
 **2. Genomic flanking context identified and validated as the main new signal.**
-**+0.164 ρ** on the curated cohort (+0.080 on the published matrix) — the largest
+**+0.164 ρ** on the curated cohort, **+0.156 on sealed genes** (+0.080 on the
+published matrix) — the largest
 effect here; a spatially local compositional gradient rather than a motif, shown
 with a texture-preserving null that also measures its autocorrelation length;
 not mappability, not gene ranking, and it survives holding out whole genes. It
@@ -1171,9 +1173,11 @@ compressed into a biology paper.
   made against the same outer folds, and sealing 20% of genes across **fifteen
   draws** puts the automatable component at **+0.0087 ρ [+0.0020, +0.0153]** —
   small, real, and a *lower* bound, since no re-derivation reaches the human
-  choices. Absolute curated figures should be read as about 0.009 optimistic;
-  the model-to-model comparisons much less so, and the parity claim not at all
-  (Part 4).
+  choices. It lands on the **differences**, not the levels: family A's gain is
+  **+0.164 in cross-validation and +0.156 on genes the pipeline never saw**,
+  while the absolute figures do not move detectably. The margin over crisprHAL 2
+  on our own folds should be read the same way; the parity claim on their splits
+  is untouched (Part 4).
 
 ---
 
@@ -1208,7 +1212,9 @@ than contaminated. But "evaluated once" is no longer true of it either, and a
 seventh reading is the point at which that should be written down rather than
 assumed. **The curated five-fold figures carry an adaptive-overfitting component of
 about +0.009 ρ** [+0.0020, +0.0153] from the automatable part, measured below,
-with the human part unquantified above it. The paper should say so.
+with the human part unquantified above it. It falls on the arm-to-arm
+differences rather than on the levels — family A reads +0.164 in CV and +0.156
+on sealed genes — and the paper should quote the sealed figure or both.
 
 Remaining before submission:
 
@@ -1331,11 +1337,35 @@ arm's own gap swings ±0.015 between sealings, so three draws could not resolve 
 0.009 effect, and a point estimate of zero from an underpowered design is not
 evidence of zero. Twelve more draws cost one night of a plugged-in laptop.
 
-*What it does and does not move.* It applies to **absolute** curated figures —
-ρ 0.7218 should be read as carrying ~0.009 of self-inflation. It applies much
-less to the **comparisons**, because a difference between two models scored on
-the same folds cancels most of a shared optimism, and not at all to the parity
-claim, which is measured on crisprHAL 2's own held-out splits.
+*Which number it moves, which is the opposite of what we first assumed.* The
+**absolute** figures are not detectably inflated: the frozen arm scores 0.7043
+in pool CV and **0.7077** on sealed genes, a gap of −0.0035 whose interval
+contains zero — the sealed genes are, if anything, marginally easier. What
+moves is the **difference between arms**, which is where the headline lives:
+
+| | pool CV | sealed genes | change |
+|---|---:|---:|---:|
+| base only (nothing chosen here) | 0.5396 | 0.5517 | +0.0121 |
+| frozen (the quoted configuration) | 0.7043 | 0.7077 | +0.0035 |
+| **the gain from the chosen configuration** | **0.1647** | **0.1560** | **−0.0087** |
+
+**So the family-A gain reads +0.164 in cross-validation and +0.156 on genes no
+part of the pipeline has seen.** That is the honest form of the number, and it
+is the same ±0.0087 as above, seen from the side that matters.
+
+*The intuition that a difference cancels shared optimism is wrong here, and this
+is the measurement that shows it.* Cancellation needs both arms to have been
+chosen on the same rows. The base-only arm was not, so the optimism does not
+subtract out — it appears in full in the difference. The same logic applies to
+**the margin over crisprHAL 2 on our own five folds**: our configuration was
+chosen on those rows and theirs was not, so +0.0161 to +0.0172 should be read as
+carrying up to this much self-inflation, leaving roughly **+0.008** on unseen
+genes. That is independently consistent with the margin on *their* held-out
+splits being +0.002 to +0.005, and it is a second contributor alongside the
+data-volume account in Finding 12 rather than a replacement for it.
+
+**The parity claim is untouched**, because it is measured on crisprHAL 2's own
+held-out partitions, which no step of our pipeline was derived on.
 
 What the experiment *cannot* reach is the cohort choice itself, and nothing in
 this design ever could.

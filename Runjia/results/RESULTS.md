@@ -94,7 +94,7 @@ marked **[P]** published or **[C]** curated. They are not interchangeable.
 | No transfer across kingdoms, in either direction | −0.039 [−0.054, −0.024]; −0.006 [−0.023, +0.011] | both | `kingdom_transfer.csv`, `kingdom_transfer_boot.csv` | `python -m sgrna.kingdom_transfer --bootstrap` |
 | The human baseline reproduces at the teammate's settings | 0.5076 against 0.472 quoted | human | `human_baseline.csv`, `human_baseline_knobs.csv` | `python -m sgrna.human_baseline` |
 | The human signal is far less additive than *E. coli*'s | ridge/boosting 63.7% vs 95.6% | human | `human_additivity.csv` | `python -m sgrna.human_baseline --additivity` |
-| **Adaptive overfitting, measured over 15 sealing draws** | **+0.0087 [+0.0020, +0.0153]** | [C] | `sealed_holdout.csv` | `python -m sgrna.sealed_holdout --seal-seeds 20261016 ... 20261030` |
+| **Adaptive overfitting, measured over 15 sealing draws** | **+0.0087 [+0.0020, +0.0153]**, falling on the arm-to-arm difference: family A is +0.1647 in pool CV and **+0.1560** on sealed genes | [C] | `sealed_holdout.csv` | `python -m sgrna.sealed_holdout --seal-seeds 20261016 ... 20261030` |
 | The 3.3× inflation is the row population, not the label | label +0.004; population ≈ +0.070 | both | `why_inflation.csv`, `ablation_label_published.csv`, `ablation_label_curated.csv` | `python -m sgrna.why_inflation` |
 | **and the mechanism is a steeper slope outside Guo's 1,222-gene panel** | β +5.4 inside, +17.0 outside | [C] | `curation_variance.csv` | `python -m sgrna.curation_variance` |
 | Gene identity explains more of the curated label than the published one | 0.844 → 0.713 within-gene share | both | `cohort_groups.csv` | `python -m sgrna.cohort_groups` |
