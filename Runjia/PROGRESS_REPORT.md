@@ -1167,8 +1167,13 @@ compressed into a biology paper.
 - **The long-range mechanism is unidentified.** Orientation is a live candidate
   with one ruled-out alternative; the most mechanistically motivated feature built
   to explain it (GC skew and helical periodicity) is a null.
-- **Adaptive overfitting.** Many choices were made against the same outer folds.
-  See the freeze below.
+- **Adaptive overfitting, now measured rather than bounded.** Many choices were
+  made against the same outer folds, and sealing 20% of genes across **fifteen
+  draws** puts the automatable component at **+0.0087 ρ [+0.0020, +0.0153]** —
+  small, real, and a *lower* bound, since no re-derivation reaches the human
+  choices. Absolute curated figures should be read as about 0.009 optimistic;
+  the model-to-model comparisons much less so, and the parity claim not at all
+  (Part 4).
 
 ---
 
@@ -1201,8 +1206,9 @@ hyperparameter and split was fixed before the partition was read, and the arms
 differ only in which training rows they see — so it remains confirmatory rather
 than contaminated. But "evaluated once" is no longer true of it either, and a
 seventh reading is the point at which that should be written down rather than
-assumed. **The curated five-fold figures carry an unknown adaptive-overfitting
-component**, and the paper should say so.
+assumed. **The curated five-fold figures carry an adaptive-overfitting component of
+about +0.009 ρ** [+0.0020, +0.0153] from the automatable part, measured below,
+with the human part unquantified above it. The paper should say so.
 
 Remaining before submission:
 
@@ -1293,29 +1299,43 @@ every figure since is computed on the rows that choice selected. No re-derivatio
 reaches it, because the alternative cohort is not a held-out sample of the same
 thing — it is a different, smaller, noisier draw.
 
-**The automatable part was measured, and the answer is a bound rather than a
-number** (`sealed_holdout.py`). Twenty per cent of the cohort is sealed by whole
-gene; selection and hyperparameters are re-derived inside the development pool;
-each arm is then scored once on the sealed genes. A reference arm whose
-configuration was *not* chosen on these rows absorbs the population difference,
-and the adaptive component is the difference of differences. Over three sealing
-draws, with training sizes matched so the sealed fit sees no more data than a
-CV fold:
+**The automatable part is measured, and it is not zero: +0.009 ρ**
+(`sealed_holdout.py`). Twenty per cent of the cohort is sealed by whole gene;
+selection and hyperparameters are re-derived inside the development pool; each
+arm is then scored once on the sealed genes. A reference arm whose configuration
+was *not* chosen on these rows absorbs the population difference, and the
+adaptive component is the difference of differences. Fifteen sealing draws, with
+training sizes matched so the sealed fit sees no more data than a CV fold:
 
-| sealing draw | reference gap | frozen | dev-tuned | adaptive component |
-|---|---:|---:|---:|---:|
-| 20261016 | +0.0009 | −0.0174 | −0.0220 | −0.018 |
-| 20261017 | −0.0196 | −0.0115 | −0.0119 | +0.008 |
-| 20261018 | −0.0237 | −0.0120 | −0.0114 | +0.012 |
-| | | | **mean** | **+0.0005 ± 0.016** |
+| | mean | sd across draws | 95% CI |
+|---|---:|---:|---|
+| reference gap (nothing chosen on these rows) | −0.0121 | 0.0148 | [−0.0196, −0.0047] |
+| frozen — the configuration the report quotes | −0.0035 | 0.0077 | [−0.0074, +0.0004] |
+| dev-tuned — re-searched inside the pool | −0.0039 | 0.0090 | [−0.0085, +0.0006] |
+| **adaptive component, frozen** | **+0.0087** | 0.0131 | **[+0.0020, +0.0153]** |
+| adaptive component, dev-tuned | +0.0082 | 0.0140 | [+0.0011, +0.0153] |
 
-**The point estimate is zero and the spread is too wide to be useful**, because
-the *reference* arm's own gap swings from +0.001 to −0.024 across draws — larger
-than the quantity being measured. One draw of 872 genes is itself a sample, and
-sealing by gene makes it a coarse one. So the defensible statement is: **no
-inflation is detectable, and the automatable adaptive component is not larger
-than about 0.02.** Resolving it to ±0.005 would need ten or more draws, or a
-larger seal, and either costs more than the answer is worth.
+**Twelve of the fifteen draws are positive**, t = 2.56 (p = 0.022), Wilcoxon
+p = 0.015, sign test p = 0.035, and a 20,000-draw bootstrap gives
+[+0.0024, +0.0152]. Dropping any single draw moves the mean only between +0.0065
+and +0.0106, so it does not rest on one sealing. **The curated five-fold figures
+are optimistic by about 0.009 ρ from the automatable part alone**, and that is a
+*lower* bound on total adaptivity, because no re-derivation reaches the human
+choices — building family A at all, the window set, the cohort.
+
+*This supersedes the three-draw result, and the way it failed is the lesson.*
+The first three draws gave **+0.0005 ± 0.016**, which was reported as "no
+inflation is detectable, and the component is not larger than about 0.02". That
+was the right reading of three draws and the wrong conclusion: the reference
+arm's own gap swings ±0.015 between sealings, so three draws could not resolve a
+0.009 effect, and a point estimate of zero from an underpowered design is not
+evidence of zero. Twelve more draws cost one night of a plugged-in laptop.
+
+*What it does and does not move.* It applies to **absolute** curated figures —
+ρ 0.7218 should be read as carrying ~0.009 of self-inflation. It applies much
+less to the **comparisons**, because a difference between two models scored on
+the same folds cancels most of a shared optimism, and not at all to the parity
+claim, which is measured on crisprHAL 2's own held-out splits.
 
 What the experiment *cannot* reach is the cohort choice itself, and nothing in
 this design ever could.
@@ -1377,7 +1397,7 @@ cost, because the cost was not small.
 | the mechanism | a dCas9 **CRISPRi** screen, the last untouched dataset, could have shown the flank effect to be about binding or accessibility rather than cleavage. Family A adds **−0.009** there against **+0.157** on the cutting screen, flank-only 0.133 against 0.341 — so the effect is specific to cutting (Finding 5) |
 | the flanking-context thesis | the family table on the curated cohort sorts by **how far outside the 20-mer a family can see**: nothing confined to the guide clears +0.019, nothing above +0.05 is confined to it. Arrived at by withdrawing a claim that pointed the other way (Appendix B3) |
 
-### What it cost — eleven claims withdrawn in eighteen days
+### What it cost — twelve claims withdrawn in nineteen days
 
 | withdrawn | replaced by |
 |---|---|
@@ -1389,6 +1409,7 @@ cost, because the cost was not small.
 | "eSpCas9 is the designated **untouched** final evaluation, to be evaluated once" | it had already been used for four feature arms across three seeds and two CV schemes. Confirmatory, not untouched; "once" was never available (Part 4, Finding 12) |
 | "SLICER beats crisprHAL 2" | **parity.** Δρ +0.0021, 95% CI [−0.0031, +0.0072] on their eSpCas9 split, +0.005 on their SpCas9 split. The lead at 26,853 training guides is +0.0133 and vanishes at 47,591 — a small-data claim, not a ranking |
 | "427 columns are non-inferior, so the matrix holds non-sequence information" | the 46 of those columns computable from the 20-mer carry the whole gain (+0.0065) and the 17 that are not carry none (−0.0007). The 427 result is re-description, not outside information |
+| "no inflation is detectable; the adaptive component is not larger than about 0.02" | **it is +0.0087 [+0.0020, +0.0153]**, from fifteen sealing draws instead of three. The original was the right reading of an underpowered design and the wrong conclusion: a point estimate of zero from three draws, against a reference arm whose own gap swings ±0.015, is not evidence of zero |
 | "ridge on the raw 6,232 collapses to 0.423 from collinearity" | only at a fixed penalty. `RidgeCV` reaches **0.4945**, so the reduced basis helps a linear model by +0.009 rather than +0.071. The 95.6%-of-boosting figure on 427 columns is unaffected, and so is the additivity claim that rests on it |
 | "cross-kingdom transfer is negative in both directions, with intervals excluding zero" | one direction only. The reverse direction held its interval off zero because the human model was fitted with *E. coli*'s hyperparameters; fitted to the human matrix it is **−0.006 [−0.023, +0.011]**. Transfer is still useless both ways, but only *E. coli* → human is measurably negative |
 | "`d_mechanics` adds no new DNA and is worth +0.099 — representation beats information" | 8 of its 30 columns are **flanking-DNA** thermodynamics and carry +0.097 of it. The representation effect is **+0.011 to +0.019**, agreed across three guide-only families |
@@ -3286,7 +3307,7 @@ against Crossref metadata rather than transcribed from memory.
 
 ## Appendix E — Withdrawn claims
 
-Thirty-one claims have been withdrawn and fourteen bugs found. They are not listed
+Thirty-two claims have been withdrawn and fourteen bugs found. They are not listed
 here, so that this document reads as a statement rather than a diary; they are in
 `docs/FINDINGS_LOG.md` in date order and in `local/MISCONCEPTIONS.md`, outside
 the repo, with the cause of each.

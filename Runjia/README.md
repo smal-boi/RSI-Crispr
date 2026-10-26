@@ -485,11 +485,14 @@ transcriptional one.
 3. **Adaptive overfitting, and the size of it.** Many choices here were made
    against the same curated five folds, so those figures carry an inflation
    component that no amount of cross-validation removes. The analysis is frozen
-   as of 11 October 2026, and the component is **bounded rather than measured**:
-   sealing 20% of genes before any tuning and comparing a frozen model against a
-   dev-tuned one puts the automatable part at **+0.0005 ± 0.016** over three
-   sealing draws (`python -m sgrna.sealed_holdout`). The point estimate is zero
-   and the spread is wider than the effect, because the reference arm's own gap
-   swings ±0.02 between draws of 872 whole genes — so the defensible statement is
-   that no inflation is detectable and the adaptive component is **not larger
-   than about 0.02 ρ**. Report it as a bound, not a correction.
+   as of 11 October 2026, and the component is **measured**: sealing 20% of genes
+   by whole gene, re-deriving selection and hyperparameters inside the
+   development pool only, and differencing against a reference arm chosen
+   elsewhere puts the automatable part at **+0.0087 ρ [+0.0020, +0.0153]** over
+   **fifteen** sealing draws — 12 of 15 positive, t = 2.56, p = 0.022
+   (`python -m sgrna.sealed_holdout --seal-seeds ...`). Read ρ 0.7218 as about
+   0.009 optimistic, treat that as a **lower** bound since no re-derivation
+   reaches the human choices, and note that model-to-model comparisons on the
+   same folds cancel most of it. An earlier three-draw version reported
+   +0.0005 ± 0.016 and "no inflation detectable"; three draws could not resolve
+   a 0.009 effect against a reference arm whose own gap swings ±0.015.

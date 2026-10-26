@@ -94,7 +94,7 @@ marked **[P]** published or **[C]** curated. They are not interchangeable.
 | No transfer across kingdoms, in either direction | −0.039 [−0.054, −0.024]; −0.006 [−0.023, +0.011] | both | `kingdom_transfer.csv`, `kingdom_transfer_boot.csv` | `python -m sgrna.kingdom_transfer --bootstrap` |
 | The human baseline reproduces at the teammate's settings | 0.5076 against 0.472 quoted | human | `human_baseline.csv`, `human_baseline_knobs.csv` | `python -m sgrna.human_baseline` |
 | The human signal is far less additive than *E. coli*'s | ridge/boosting 63.7% vs 95.6% | human | `human_additivity.csv` | `python -m sgrna.human_baseline --additivity` |
-| Adaptive overfitting is bounded, not measured | +0.0005 ± 0.016, so ≲0.02 | [C] | `sealed_holdout.csv` | `python -m sgrna.sealed_holdout --seal-seeds 3` |
+| **Adaptive overfitting, measured over 15 sealing draws** | **+0.0087 [+0.0020, +0.0153]** | [C] | `sealed_holdout.csv` | `python -m sgrna.sealed_holdout --seal-seeds 20261016 ... 20261030` |
 | The 3.3× inflation is the row population, not the label | label +0.004; population ≈ +0.070 | both | `why_inflation.csv`, `ablation_label_published.csv`, `ablation_label_curated.csv` | `python -m sgrna.why_inflation` |
 | **and the mechanism is a steeper slope outside Guo's 1,222-gene panel** | β +5.4 inside, +17.0 outside | [C] | `curation_variance.csv` | `python -m sgrna.curation_variance` |
 | Gene identity explains more of the curated label than the published one | 0.844 → 0.713 within-gene share | both | `cohort_groups.csv` | `python -m sgrna.cohort_groups` |
@@ -104,7 +104,7 @@ marked **[P]** published or **[C]** curated. They are not interchangeable.
 ## † Files whose producer was lost, and what re-deriving them found
 
 Thirteen files cited above were written by code no longer in `src/` or `colab/`.
-`python -m sgrna.rederive` now reproduces eleven of them from committed code and
+`python -m sgrna.rederive` now reproduces twelve of them from committed code and
 **compares rather than overwrites** — re-derivation is a check, and the stored
 file stays authoritative. Verdicts in `results/rederivation_check.csv`, outputs
 in `results/rederived/`:
@@ -121,7 +121,7 @@ in `results/rederived/`:
 | `d_mechanics_reconstructibility.csv` | agrees in distribution, median 0.832 against 0.845; the file is keyless so rows cannot be aligned |
 | `additivity_reduced.csv` | **two of four arms exact, two wrong** — see below |
 | `abund_local_vs_mappability.csv` | **not reproducible**: the definition of its `uniq` columns is lost. Five candidates were tried and none comes near the stored values (its `control.w10000` / `uniq.w10000` cell is −0.694; windowed exact-20-mer uniqueness gives −0.08, mean `unique_in_genome` −0.06, mean `n_genome_copies` +0.06, guide density −0.05, and the same at 2 kb). The stored quantity grows in magnitude with window width, which suggests it was derived from read data rather than from the genome — do not spend more time guessing it |
-| `seqnet_matched.csv` | **exact** on the two arms re-run so far (f100 0.5203, f250 0.5247, to four decimals); f500 and f1000 use the identical code path and were still running at commit time. `python -m sgrna.seqnet --flank {100,250,500,1000} --out results/rederived/seqnet_matched.csv` |
+| `seqnet_matched.csv` | **exact on all four arms, all 20 folds** (f100 0.5203, f250 0.5247, f500 0.5214, f1000 0.5190 — zero difference to four decimals). `python -m sgrna.seqnet --flank {100,250,500,1000} --out results/rederived/seqnet_matched.csv` |
 | `matched_search_folds.csv` | **agrees to 0.0001** — it is a join of four local files, not a GPU artefact, and is now re-derived as one |
 | `crisprhal_matched_folds.csv` | the only genuine GPU artefact. `colab/crisprhal_tune_matched.py` now writes it under exactly that name with the `is_published_config` flag, so a rerun reproduces it — but the rerun needs a T4 |
 

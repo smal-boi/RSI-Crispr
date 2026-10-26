@@ -4654,3 +4654,47 @@ supports rests on `dissection_supercoiling`, which does reproduce), and a
 duplicate of `lit_review/beyond_QCT_literature_review.md` sits at the project
 root — flagged rather than deleted, since nothing here is under version control
 outside `RSI-Crispr/`.
+
+---
+
+## 26 October 2026 — the adaptive component is not zero: +0.0087
+
+Twelve more sealing draws overnight, bringing the sealed-holdout design to
+**fifteen**. The three-draw result is superseded, and the conclusion reverses.
+
+| | mean | sd across draws | 95% CI |
+|---|---:|---:|---|
+| reference gap (nothing chosen on these rows) | −0.0121 | 0.0148 | [−0.0196, −0.0047] |
+| frozen — the configuration the report quotes | −0.0035 | 0.0077 | [−0.0074, +0.0004] |
+| dev-tuned — re-searched inside the pool | −0.0039 | 0.0090 | [−0.0085, +0.0006] |
+| **adaptive component, frozen** | **+0.0087** | 0.0131 | **[+0.0020, +0.0153]** |
+| adaptive component, dev-tuned | +0.0082 | 0.0140 | [+0.0011, +0.0153] |
+
+12 of 15 draws positive; t = 2.56, p = 0.022; Wilcoxon p = 0.015; sign test
+p = 0.035; 20,000-draw bootstrap [+0.0024, +0.0152]. Leave-one-out moves the mean
+only between +0.0065 and +0.0106, so no single sealing carries it.
+
+**So the curated five-fold figures are optimistic by about 0.009 ρ from the
+automatable part alone** — and that is a *lower* bound, since no re-derivation
+reaches the human choices: building family A at all, the window set, the cohort.
+ρ 0.7218 should be read accordingly. The comparisons are much less affected
+(a difference between two models on the same folds cancels most of a shared
+optimism) and the parity claim not at all, since it lives on crisprHAL 2's own
+held-out splits.
+
+**How the first version failed is the part worth keeping.** Three draws gave
++0.0005 ± 0.016 and were written up as "no inflation is detectable, and the
+component is not larger than about 0.02". That was the correct reading of three
+draws and the wrong conclusion. The reference arm's own gap swings ±0.015
+between sealings, so three draws could not resolve a 0.009 effect; a point
+estimate of zero from an underpowered design is not evidence of zero, and the
+report said "no inflation is detectable" when it should have said "this design
+cannot see an effect this size". Withdrawn — the twelfth. Twelve more draws cost
+one night of a laptop that was going to be plugged in anyway, which is the whole
+lesson: the earlier note that resolving it "costs more than the answer is worth"
+was wrong about the cost and wrong about the worth.
+
+**And `seqnet_matched.csv` re-derives exactly** — all four flank widths, all 20
+folds, zero difference to four decimals (f100 0.5203, f250 0.5247, f500 0.5214,
+f1000 0.5190). Twelve of the original thirteen orphan files are now reproducible
+from committed code; the only one left is the Colab GPU search.
