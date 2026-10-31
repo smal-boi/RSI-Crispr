@@ -181,17 +181,20 @@ identical to a nearest-neighbour energy sum, with the physics replaced by noise
 — is worth **−0.0004, −0.0004, −0.0002 and −0.0015** on the curated base, three
 independent draws each. Nothing at every count, and enough of them begin to cost.
 So the hundredth belongs to the *particular* functions and not to re-description
-as a class. What makes a function particular is narrower than physics: the
-random tables are **linear** sums, which a tree can already approximate from the
-one-hot columns it holds, so they are both uninformative *and* cheap. The
-columns that pay are uninformative but **expensive** — `eng.dg.guide_selffold`,
-a single guide-RNA self-folding energy fully determined by the 20-mer, is worth
-**+0.0116 by itself** (Appendix B, *Every family split the way `d_mechanics`
-was*). The operative axis is cheap against expensive for this learner, not
-physical against arbitrary. None of it is a feature-selection
-artefact: on the full `d_mechanics` arm, using every column rather than selecting
-300 gives the same gain, **+0.0993 against +0.0988**
-(`results/selector_control.csv`).
+as a class. **Nor is it that the tree cannot compute them cheaply**, which was
+this project's reading for a time and does not survive its own control: random
+*non-linear* functions of the guide — expensive by construction, and matched on
+out-of-fold recoverability to the real fold energy's R² 0.316 — are worth +0.0001
+to +0.0007 at every interaction order from 2 to 8. What the functions that pay
+have in common is that they **track the phenotype**: `eng.dg.guide_selffold`, a
+single guide-RNA self-folding energy fully determined by the 20-mer, carries a
+marginal \|ρ\| of 0.102 against the label and is worth **+0.0116 by itself**,
+while a random function of the same difficulty carries no association and buys
+nothing (Appendix B, *Every family split the way `d_mechanics` was*). The physics
+is load-bearing, and difficulty only orders the functions that already qualify.
+None of it is a feature-selection artefact: on the full `d_mechanics` arm, using
+every column rather than selecting 300 gives the same gain, **+0.0993 against
++0.0988** (`results/selector_control.csv`).
 
 *That last point is often stated as a theorem and is false as one.* If the matrix
 encodes the 20-mer losslessly, it is tempting to conclude that any deterministic
@@ -448,7 +451,8 @@ them.
 published hyperparameters, is degraded by input wider than it was designed
 for.** Not that convolutional networks cannot learn long-range composition — its
 48 epochs and every other setting were chosen at 378 nt, and a re-tune at each
-width has not been run. One fold, one seed.
+width has not been run (`colab/crisprhal_tune_by_width.py` is written and
+pre-registers which reading each outcome supports). One fold, one seed.
 
 *Is "as published, with more of the genome" a fair test?* Of one claim only.
 Equalising the input DNA removes the information asymmetry — in fact it reverses
@@ -468,10 +472,13 @@ from 0.554 on the sgRNA alone to 0.697 at 378 nt. So 378 nt is not an arbitrary
 inherited setting — it is where **their** search stopped improving, and the
 decline we measure at 1,023 and 2,023 nt is the continuation of a curve they had
 already flattened. What remains unrun is re-tuning the other hyperparameters at
-each width, which is a weaker objection than it was before this was read.
+each width, which is a weaker objection than it was before this was read, and is
+the one item on Part 4's list still waiting on a GPU rather than on a decision.
 
 
 ### 3. The effect belongs to the DNA, and transfers
+
+#### Transfer, one variable at a time
 
 **Transfer, stated as one variable at a time.** Each row trains SLICER on one
 screen and predicts another without retraining or recalibration. *Transferred* is
@@ -498,6 +505,8 @@ features carry **+0.150 of the 0.628**, nearly a quarter of everything that
 arrives. That is the sense in which the effect "belongs to the DNA": it is the
 part of the model that survives changing the protein and the host.
 
+#### Three confound controls
+
 **Three confound controls, which are not transfer tests and answer a different
 question:**
 
@@ -519,6 +528,8 @@ guides whose reads cannot be misassigned. The **within-gene** comparison removes
 the gene-ranking explanation by asking the question entirely inside genes, where
 "which gene" is constant. Nothing here is an intervention, so together they still
 only rule things out.
+
+#### The cross-assay test, and what it took to trust it
 
 **The one test that could have falsified the mechanism, and what it took to
 trust it.** Finding 2's account is a duplex-opening step limited by local DNA
@@ -649,6 +660,8 @@ null has many possible authors; what makes it interpretable is that the *base*
 predicts 0.458
 on the same rows, so the pipeline plainly works on this screen and the null
 belongs to family A rather than to the run.
+
+#### What the predictor is therefore for
 
 **Does cleavage-specificity make the predictor useless for real editing work?**
 It is the first thing to ask after the dCas9 result, and the answer turns on
@@ -804,6 +817,8 @@ number here would be a choice of condition dressed as a finding.
 | **equal input DNA** | all of the above *plus* the DNA each model reads | **depends on the width** — crisprHAL +0.023 at 378 nt, SLICER +0.065 at ±1,000 nt |
 | **a different assay, neither model trained on it** | rows, label, and that neither has seen the data | **crisprHAL +0.026** [+0.023, +0.029] |
 
+#### Condition one: our five folds, both models tuned here
+
 **On held-out folds of our own cohort, we are ahead by a margin that resolves.**
 Each guide is predicted exactly once by a model that never saw it, so the five
 validation folds give 33,567 out-of-fold predictions per model over the same
@@ -822,6 +837,8 @@ configuration inherited from the baseline script this project started from, not
 LightGBM's defaults (100, 0.1, 31, −1, no subsampling), while crisprHAL's arm
 really is its published configuration. **No row in this table is symmetric in
 search effort**, which is why the matched search below matters.
+
+#### Was the search unequal? A search of their own, twice
 
 **A hyperparameter search of their own, run 16 October, does not close that gap —
 it widens it, and the reason is more interesting than the number.** Given a
@@ -860,6 +877,8 @@ fold before patience stopped it. Matching that would be ~100 draws per fold,
 about **40 GPU-hours**, and has not been run — so the margin remains formally an
 upper bound, now one with a measurement behind it rather than only a caveat
 (Appendix B).
+
+#### Condition two: their splits, their published weights — parity
 
 **On crisprHAL 2's own two splits, evaluated against their own published
 weights, it is parity — and parity as a measured equivalence rather than as a
@@ -900,6 +919,8 @@ goes +0.0133 at 26,853 to +0.0021 at 47,591. **So the data-efficiency claim
 survives and the ranking claim does not.** "SLICER beats crisprHAL 2" is a claim
 about the small-data regime; at 47.6k labelled guides it is false.
 
+#### Each published model on the cohort it was built for
+
 **The two like-for-like comparisons, each on its own home ground.** Before any
 ablation: the two published models this project is measured against were fitted
 on different cohorts, so each is compared on the data it was built for, with
@@ -924,6 +945,8 @@ is beaten decisively on its own cohort, by a margin that is mostly the flank
 features; crisprHAL 2 is matched, not beaten. A paper that quotes only the first
 overstates the contribution and a paper that quotes only the second understates
 how far the field moved between the two.
+
+#### What parity is bought with, holding the architecture fixed
 
 **Hold the architecture fixed and change only the training data, and parity turns
 out to be bought with rows.** The comparison above varies the condition; this one
@@ -973,6 +996,8 @@ is better on Noshay's cohort; nothing here tests that, and the sample-complexity
 curves predict the opposite, since their model degrades faster as labels get
 scarce (Appendix B).
 
+#### Size and interpretability, where there is no common unit
+
 **On model size there is no common unit, so both are reported.** A CNN is quoted
 by its trainable parameter count; crisprHAL 2's WT-SpCas9 model holds **790,533**
 of them across 37 layers (823,301 for eSpCas9). A boosted ensemble has no weight
@@ -1003,6 +1028,8 @@ flanking DNA, which contributes nothing to silencing (Finding 3). **Our
 representation is the more specialised of the two**, and that is a real cost of
 the design.
 
+#### The sentence that survives every condition
+
 *The claim that survives all four conditions*, and the sentence the paper should
 use:
 
@@ -1013,6 +1040,8 @@ use:
 > guides. Under equal input DNA the ranking depends on the window: crisprHAL 2 is
 > better inside its own 378 nt span, and SLICER is better once the window reaches
 > the 250–1,000 nt its input cannot see.
+
+#### How to read these numbers: cost, and what ρ buys
 
 **The nuance that "150× less compute" needs, stated here rather than buried.**
 There is **no architecture-independent measure of cost**, and FLOPs is not one:
@@ -1135,12 +1164,15 @@ mechanism.
 
 **Directional.**
 
-4. **Orientation relative to transcription matters**, by Δ **0.051**
-   [0.020, 0.082] against a curated RegulonDB TSS — so the surrounding DNA is not
-   acting through composition alone. Something with a direction is involved
-   (transcription, replication, or the supercoiling domains they create), and
-   which one is unidentified. This is the most mechanistically suggestive loose
-   end in the project.
+4. **Orientation relative to transcription matters — Jacky's result, not this
+   project's**, and listed here because the mechanism argument above leans on
+   it: Δ **0.051** [0.020, 0.082] against a curated RegulonDB TSS, which
+   replaced our own nearest-gene proxy after his matched comparison showed that
+   version to be a cohort confound (0.007 [−0.024, 0.038]). So the surrounding
+   DNA is not acting through composition alone. Something with a direction is
+   involved — transcription, replication, or the supercoiling domains they
+   create — and which one is unidentified. It is the most mechanistically
+   suggestive loose end around this work, and it belongs in his write-up.
 
 **Constraints — each rules out a mechanism that would otherwise be the obvious
 candidate.**
@@ -1262,10 +1294,15 @@ the same base composition and the same non-linearity, run on each guide with
 entire effect while preserving everything else about the quantity.
 
 **So it is not composition, and it is not the fact that folding is hard for a
-tree to compute. It is the particular structure the real spacer forms.** The
-mechanism this supports is the standard one — a spacer that base-pairs with
-itself is less available to invade the target duplex — and the measurement says
-it operates in this cohort at a marginal strength comparable to flank GC.
+tree to compute. It is the particular structure the real spacer forms.** A second
+control says the same thing from the other direction: random *non-linear*
+functions of the guide, built to be as hard for the tree as the real fold energy
+and matched on out-of-fold recoverability (R² 0.34–0.48 against the real column's
+0.32), are worth +0.0001 to +0.0007 at every interaction order tried
+(Appendix B). Difficulty without meaning buys nothing. The mechanism this
+supports is the standard one — a spacer that base-pairs with itself is less
+available to invade the target duplex — and the measurement says it operates in
+this cohort at a marginal strength comparable to flank GC.
 
 *Why it could be wrong:* one cohort, and the shuffled control is conservative in
 the other direction — it preserves composition, so if composition carried the
@@ -1494,7 +1531,7 @@ Remaining before submission:
 | 4 | ~~human baseline re-tuned at the teammate's settings~~ | **done, and it reproduces: ρ 0.5076 against the 0.472 quoted.** The settings arrived 16 October; the gain is hyperparameters, not columns (+0.1002 against +0.0038), and the reason is that the human signal is far less additive than *E. coli*'s (ridge/boosting 63.7% against 95.6%), so the champion is the wrong shape for it by 0.10 ρ. **This cost a claim**: refitting the human side moved one cross-kingdom transfer direction from −0.016 to −0.006 [−0.023, +0.011], i.e. to zero, so "negative in both directions with intervals excluding zero" is withdrawn in favour of "no transfer in either direction" (Part 5, Appendix B) |
 | 5 | ~~conditional test of the GC hypothesis within matched GC strata~~ | **done** — Finding 3 |
 | 6 | ~~sample-complexity curve repeated across folds and seeds~~ | **done** — Appendix B |
-| 7 | re-tune crisprHAL 2 at **each input width** — **partly supplied by their own paper.** Browne et al. searched input length *per dataset* and stopped at 378 nt (*E. coli* SpCas9) and 406 nt (eSpCas9), reporting that gains level off: +0.00034 ρ per upstream nucleotide and +0.00074 per downstream one, from 0.554 on the sgRNA alone to 0.697 at 378 nt. So the width is their optimum, found by their own search, and our 1,023/2,023 nt degradation is the continuation of a curve they had already flattened. What is still unrun is re-tuning the *other* hyperparameters at each width | 2–4 GPU-h, now optional |
+| 7 | re-tune crisprHAL 2 at **each input width** — **partly supplied by their own paper.** Browne et al. searched input length *per dataset* and stopped at 378 nt (*E. coli* SpCas9) and 406 nt (eSpCas9), reporting that gains level off: +0.00034 ρ per upstream nucleotide and +0.00074 per downstream one, from 0.554 on the sgRNA alone to 0.697 at 378 nt. So the width is their optimum, found by their own search, and our 1,023/2,023 nt degradation is the continuation of a curve they had already flattened. What is still unrun is re-tuning the *other* hyperparameters at each width. The script is written and anchored on the 378 nt positive control (`colab/crisprhal_tune_by_width.py`); only the GPU time is outstanding | 4–6 GPU-h, now optional |
 | 8 | ~~re-derive the ceiling for the curated label~~ | **done: 0.946 [0.944, 0.948]**, from their own published per-replicate counts, cohort and label both verified to reproduce, and conservative by construction (Finding 6) |
 | 9 | ~~re-run the gene-grouped ablation on the curated cohort~~ | **done** — all eleven families, Appendix B3. The three largest effects lose nothing beyond the 6% grouping tax; `e_nucleoid` and `g_transcription` carry a real locus component of 6 and 15 points |
 
@@ -2039,195 +2076,104 @@ claim in Parts 1–3 rests on it.
 
 **B.1 — Can the head-to-head be trusted?**
 
-### Was it fair to tune crisprHAL 2? Yes — so it was run, and it found nothing
+### The search asymmetry: what closing it cost, and why it was not closed further
 
-The question was put in the right form: if a matched search is the fair
-comparison, the fact that it would weaken our margin is not a reason to skip it.
-So it was argued on fairness alone, and the answer was yes, with one refinement —
-**"to convergence" is not a well-defined target** for a deep network, since the
-result depends on who draws the search space and when they stop, while **"equal
-effort under an equal protocol"** is. Then it was run (16 October,
-`colab/crisprhal_tune_matched.py`, free T4).
+Finding 7 carries the result — 0.6987 against their published configuration's
+0.6971, that configuration winning four of five inner searches, and a residual
+~20× asymmetry. Four things about the run belong here rather than there.
 
-**Result: 0.6987 mean over the five folds**, against their published
-configuration's 0.6971 and the 0.7051 of the best configuration any search has
-found. **Their published configuration won the inner search in four folds of
-five.** The fifth chose a draw ahead by 0.0016 on the inner split — within its
-noise. The margin against this arm is +0.0225, 5/5 folds, p < 0.001.
+*The hardware is what made any version of it affordable.* Their published
+configuration fits one fold in **5.48 min on a free Colab T4** against **17.0 min
+locally**, a measured **3.1×** (`crisprhal_wide_window.csv` against
+`crisprhal_rerun.csv`). A TPU would have been the wrong instrument: TPUs earn
+their keep on large dense matmul under XLA, and this model's recurrent branch is
+a bidirectional GRU, the shape that maps worst onto them.
 
-**My prediction was wrong, and the reasoning behind it was the mistake.** I
-predicted ~0.716 — the margin narrowing to ~+0.005 — by anchoring on their
-published WT model scoring 0.695 on their own WT split where we score 0.6997.
-That anchor is a **single 6,737-guide partition**, where the standard error of ρ
-is ≈0.006, so +0.005 and +0.017 sit about two standard errors apart and the split
-simply cannot distinguish them. I treated a noisy one-split estimate as a precise
-prediction for a five-fold paired one. The eSpCas9 parity result
-(+0.0021, CI [−0.0031, +0.0072]) is the tight one, and it is at a different data
-volume, which is why it does not transfer to our folds either.
+*It was costed three times and only the third was a measurement.* First ~460
+CPU-hours, for 627 draws locally. Then "2–4 GPU-hours", which priced their
+*default* configuration for a search that mostly does not use it — the local
+search's median fit was 44 min against 17 for the default, because the draws
+average larger networks. Then the run: **33 fits, ~2.6 GPU-hours**, at 2.3–8.6
+min each, because patience stopped every fold after 5–8 draws. The cheap version
+is cheap *because* it gives up early, and why it gives up is the result.
 
-**The argument for running it, kept because the conclusion depended on it.**
-Every reason for skipping had expired, and one of them turned out to be an error
-of ours:
+*The prediction was wrong, and the reasoning was the mistake.* I predicted ~0.716
+— the margin narrowing to ~+0.005 — by anchoring on their published WT model
+scoring 0.695 on their own WT split, where we score 0.6997. That anchor is a
+single 6,737-guide partition on which the standard error of ρ is ≈0.006, so
++0.005 and +0.017 sit about two standard errors apart and the split cannot
+distinguish them. A noisy one-split estimate was treated as a precise prediction
+for a five-fold paired one.
 
-| the reason | status |
-|---|---|
-| ~~17 CPU-hours locally, too expensive~~ | **gone** — 3.1× faster on a free T4 |
-| ~~their published weights already answer it~~ | **answers a different question.** They settle the comparison *on their splits*, where it is parity; they say nothing about our folds, where the margin lives |
-| ~~defaults-vs-defaults is a clean like-for-like fallback~~ | **false.** Our "default" is the 627-draw champion from the published cohort; theirs is their published configuration (Finding 7) |
-| ~~we flagged it as an upper bound, which is honest~~ | **not sufficient**, and we had pre-registered the obligation: `crisprhal_tune.py` says that if their tuned score does not close the gap, "the asymmetry is a live caveat and must be quoted alongside the result." It did not close the gap |
-
-The interpretation was fixed before the run, in three brackets: **≥ ~0.716**
-would mean the margin was mostly a tuning artefact; **0.704–0.710** that it
-survives at ~+0.005 to +0.010; **above 0.7213** that we lose on our own folds.
-The outcome, 0.6987, fell **below all three** — an outcome the brackets had not
-anticipated, which is worth recording as a limit of pre-registration rather than
-a success of it. Draw 0 doubled as the positive control and behaved: 0.6909,
-0.6851, 0.6875, 0.6909, 0.6905 on the inner splits, with finals in the
-0.686–0.702 band predicted from `crisprhal_rerun.csv`.
-
-**What the run does establish, which is not what it was run for — and the caveat
-the paper needs.** The two models differ in **tunability**, measured: an
-equivalent small search on our side (12 draws per fold) buys **+0.0103**, while
-5–8 draws on theirs buys nothing. **crisprHAL 2 as published is at or very near
-the optimum of the space we searched, and tuning it does not appear to move it.**
-That is a caveat with two faces, and both belong in the paper:
-
-* *in their favour*, and this is the one a reviewer will want stated: their
-  published configuration is not a soft target. It beat four of five inner
-  searches, so a margin measured against it is not a margin against a
-  carelessly-configured baseline;
-* *in ours*: it retires the tuning-effort objection more firmly than equalising
-  effort could have, because equal effort yields them nothing. The margin cannot
-  be explained by our having searched harder, since searching harder on their
-  side produces no gain to explain it with.
+*And the pre-registration helped less than it should have.* The interpretation
+was fixed in three brackets beforehand: **≥ ~0.716** would mean the margin was
+mostly a tuning artefact, **0.704–0.710** that it survives at +0.005 to +0.010,
+**above 0.7213** that we lose on our own folds. The outcome, 0.6987, fell **below
+all three**. Draw 0 doubled as the positive control and behaved — inner 0.6909,
+0.6851, 0.6875, 0.6909, 0.6905, with finals in the 0.686–0.702 band
+`crisprhal_rerun.csv` predicts. Brackets that do not span the outcome are a limit
+of pre-registration, not a success of it.
 
 **Decision, 16 October: the ~40 GPU-hour fully-matched search will not be run.**
-The 2.6-hour version already shows the search reverting to their published
-configuration in four folds of five, and ~100 draws per fold would most likely
-buy a tighter bound on the same conclusion. The honest headline is the margin
-against their **best known** configuration — **+0.0161** — with the residual
-~20× search asymmetry stated. Reversing this decision would need a reason beyond
-wanting a larger number.
+A genuinely matched search is ~100 draws per fold at ~5 GPU-minutes each, and it
+would most likely buy a tighter bound on the same conclusion, since the
+2.6-hour version already shows the search reverting to their published
+configuration in four folds of five. The honest headline is the margin against
+their **best known** configuration, **+0.0161**, with the asymmetry stated.
+Reversing this decision needs a reason beyond wanting a larger number.
 
-**And the searches are still not equal, by about 20×.** Our reported tuned arm
-used **97–157 draws per fold, 627 in total** (`results/tuning.csv`) — not the
-"12 per fold" this report stated until 16 October, a figure taken from
-`tune.py`'s CLI default rather than from the run that produced the number, and
-then repeated into the Colab script's own docstring. A genuinely matched search
-is ~100 draws per fold at ~5 GPU-minutes each, **~40 GPU-hours**. So the margin
-is still formally an upper bound. What has changed is that the bound now rests on
-a measurement — a search that reverts to their defaults — rather than on a
-caveat.
-
-### What an equal-footing search costs, and what it cost in the end
-
-The margin's weakest point was that crisprHAL got 10 configurations and SLICER
-627. **A TPU would be the wrong instrument for closing it** — TPUs earn their
-keep on large dense matmul under XLA, and this model's recurrent branch is a
-bidirectional GRU, the shape that maps worst onto them; a mid-range GPU is
-cheaper and faster. The free Colab T4 was the right instrument, and the question
-was only how many fits it had to do.
-
-*The hardware first.* Their published configuration fits one fold in **5.48 min
-on a free Colab T4** against **17.0 min locally** — a measured **3.1×**
-(`crisprhal_wide_window.csv` against `crisprhal_rerun.csv`), and that is what
-made any version of this affordable.
-
-*Costed three times, and only the third was from measurement.* The first
-estimate was ~460 CPU-hours (matching 627 draws locally). The second was "2–4
-GPU-hours, one free Colab session", which priced their *default* configuration
-for a search that mostly does not use it; the local search's median fit was 44
-min against 17 for the default, because the draws average larger networks. **The run settles it**: 33 fits across
-five folds took **~2.6 GPU-hours** at 2.3–8.6 min each, because patience stopped
-every fold after 5–8 draws. A *genuinely* matched search — ~100 draws per fold,
-since that is what ours used — would be ~500 fits and **~40 GPU-hours**.
-
-So the cheap version is cheap because it gives up early, and the reason it gives
-up is the result: nothing in the space beats their published configuration, so
-patience fires after four consecutive non-improvements. The expensive version
-would buy a tighter bound on the same conclusion.
-
-**For the comparison on *their* splits it is moot; for ours it is not.** The
-objection applies to *our* runs of their architecture, which is exactly what the
-five-fold rows are. On their own two shipped splits we compare
-against **their published weights** — their tuning, their search, their
-published numbers, which our harness reproduces to three decimals (ρ 0.782 →
-0.7821 on eSpCas9) — and the margins are +0.005 and +0.002 (Finding 7). Whatever
-search budget they used is already inside those numbers. The tuning-matched run
-remains worth doing as a *cost* measurement; it is no longer a threat to the
-*performance* claim.
+**On their own two splits none of this applies**, because there the comparison is
+against their published weights — their tuning, their search, their published
+numbers, which our harness reproduces to three decimals (ρ 0.782 → 0.7821 on
+eSpCas9). Whatever budget they used is already inside the +0.005 and +0.002.
 
 ### What are all of XGBoost's hyperparameters, and does this project need them?
 
 The champion is an `XGBRegressor`, so "have we tuned it?" has a countable
-answer. The sklearn API exposes **40 constructor parameters**. Twenty-two are
-plumbing — `objective`, `n_jobs`, `random_state`, `verbosity`, `missing`,
-`device`, the categorical-handling group this project never enables, and the
-classification-only ones — which leaves **18 real tuning knobs**. What has been
-done with each:
+answer. The sklearn API exposes **40 constructor parameters**, twenty-two of them
+plumbing — objective, threading, seeds, verbosity, device, the categorical group
+this project never enables, the classification-only ones — which leaves **18
+real knobs**. Six have been varied by a search here; **eleven had never moved.**
 
-| knob | champion sets it | varied by a search here? |
-|---|---|---|
-| `n_estimators` | ✓ 400 | LightGBM search only |
-| `learning_rate` | ✓ 0.05 | both searches |
-| `max_depth` | ✓ 4 | both searches |
-| `min_child_weight` | ✓ | XGBoost search only |
-| `subsample` | ✓ 0.8 | both searches |
-| `colsample_bytree` | ✓ 0.8 | both searches |
-| `reg_lambda` | ✓ | both searches |
-| `reg_alpha` | ✓ at 0.0 | **never** |
-| `tree_method` | ✓ `hist` | **never** |
-| `gamma` | — | **never** |
-| `colsample_bylevel` | — | **never** |
-| `colsample_bynode` | — | **never** |
-| `max_bin` | — | **never** |
-| `grow_policy`, `max_leaves` | — | **never** |
-| `max_delta_step` | — | **never** |
-| `num_parallel_tree` | — | **never** |
-| `booster` (`gbtree`/`dart`) | — | **never** |
-
-**Six of eighteen have been varied; eleven have never moved.** And one piece of
-bookkeeping worth stating plainly, because the report leaned on it for weeks:
-**the 627-draw search was run on LightGBM, not XGBoost** (`tune.py`'s
+One piece of bookkeeping goes with that, because the report leaned on it for
+weeks: **the 627-draw search was run on LightGBM, not XGBoost** (`tune.py`'s
 `sample_config` draws `num_leaves` and `min_child_samples`, which are LightGBM
 names). The only XGBoost search in the project is the 8-draw one inside the
 sealed holdout.
 
-**So the eleven untouched knobs were swept** — one at a time around the
-champion, 25 arms, on the curated base with family A, with selection cached per
-fold so the whole sweep costs about one search (`xgb_knobs.py`,
-`results/xgb_knobs.csv`). Three of them had a reason to be there beyond
-completeness: `colsample_bylevel` and `colsample_bynode` exist for exactly the
-wide, redundant matrix this project has, and `max_bin` interacts with a sparse
-binary one.
+**So the eleven were swept** — one at a time around the champion, 25 arms, on the
+curated base with family A, selection cached per fold so the whole sweep costs
+about one search (`xgb_knobs.py`, `results/xgb_knobs.csv`). Three had a reason to
+be there beyond completeness: `colsample_bylevel` and `colsample_bynode` exist
+for exactly the wide, redundant matrix this project has, and `max_bin` interacts
+with a sparse binary one.
 
 | knob | best value found | Δρ against the champion's 0.7084 |
 |---|---|---:|
 | `grow_policy` = `lossguide`, `max_leaves` 63 | — | **+0.0069** |
 | `num_parallel_tree` | 4 | +0.0025 |
-| `max_bin` | 64 | +0.0001 |
 | `reg_alpha` | 1.0 | +0.0004 |
+| `max_bin` | 64 | +0.0001 |
 | `gamma` | any | −0.0002 to +0.0000 |
-| `colsample_bylevel` | 1.0 (the default) | −0.0014 at 0.5 |
 | `colsample_bynode` | 1.0 (the default) | −0.0009 at 0.8 |
+| `colsample_bylevel` | 1.0 (the default) | −0.0014 at 0.5 |
 | `max_delta_step` | 0 (the default) | **−0.0080** at 1 |
 
-**Ten of the eleven do nothing, and two of them do harm.** Per-level and
-per-node column subsampling — the two with the best prior reason to help — both
-want to be switched off, which says the 300-column budget has already done the
+**Ten of the eleven do nothing, and two do harm.** Per-level and per-node column
+subsampling — the two with the best prior reason to help — both want to be
+switched off, which says the 300-column budget has already done the
 decorrelating they exist for. `max_delta_step=1` costs eight thousandths, as it
 should on an unbounded regression target.
 
-**The eleventh looked like a find, and the control says it is not.** A 25-arm
-sweep reports the maximum of 25 draws on one fold partition, and the adaptive
-component measured elsewhere in this project is **+0.0087** — larger than the
+**The eleventh looked like a find, and the control says it is capacity.** A
+25-arm sweep reports the maximum of 25 draws on one fold partition, against an
+adaptive component measured elsewhere here of **+0.0087** — larger than the
 +0.0069 at issue. So the winner was re-run on fold partitions it had never seen,
-alongside a control that isolates what actually changed: `lossguide` with 63
-leaves is *two* changes, a different grow policy **and** four times the
-capacity, so `depthwise` at `max_depth=6` (~64 leaves, original policy) was run
-beside it (`xgb_knobs.py --verify`, `results/xgb_knobs_verify.csv`).
-
-Three fold partitions, fifteen paired fold-level comparisons, bootstrapped:
+beside a control that isolates what actually changed: `lossguide` with 63 leaves
+is *two* changes, a different grow policy **and** four times the capacity, so
+`depthwise` at `max_depth=6` was run next to it (`xgb_knobs.py --verify`,
+`results/xgb_knobs_verify.csv`). Three fold partitions, fifteen paired
+comparisons, bootstrapped:
 
 | arm | Δρ against the champion | 95% CI | folds improved |
 |---|---:|---|---:|
@@ -2235,41 +2181,27 @@ Three fold partitions, fifteen paired fold-level comparisons, bootstrapped:
 | **`depthwise`, `max_depth=6`** | **+0.0063** | [+0.0053, +0.0073] | 15/15 |
 | `num_parallel_tree=4` | +0.0024 | [+0.0019, +0.0029] | 15/15 |
 
-**The gain is real and it is not the grow policy.** The two capacity arms are
-indistinguishable — overlapping intervals, 0.0004 apart — so `lossguide` is
-doing nothing that four times the leaves does not do under the original policy.
-What the sweep actually found is that **`max_depth=4` is too shallow for this
-cohort by about six thousandths of ρ**, reproducibly, on every one of fifteen
-folds.
-
-That is a finding about an *already-tuned* knob, which makes the eleven
-never-tuned ones a clean null: none of them does anything that matters, and the
-one apparent exception collapses into `max_depth`. It also sharpens the
-bookkeeping above. `max_depth` is marked "varied by both searches", but the
-champion's value **was not chosen by either of them** — like the rest of the
-champion configuration it is inherited from
-`FINAL_baseline_ecoli_sgRNA_model_5seeds.py` (Part 4's decision register), and
-the LightGBM search varied LightGBM's own depth alongside `num_leaves`. So
-XGBoost's depth had never actually been set by a measurement on this cohort
-until now.
-
-**It is not being adopted.** +0.0063 is smaller than the +0.0087 adaptive
-component measured on these same folds, the freeze is the whole point of Part 4,
-and a sixth-thousandth gain on the cohort the configuration was selected against
-is exactly the kind of thing that does not survive a sealed holdout. It is
-recorded as a measured property of the cohort, and as the one place a reader
-should look first if the freeze is ever lifted.
+Overlapping intervals 0.0004 apart, so `lossguide` is doing nothing that four
+times the leaves does not do under the original policy. What the sweep found is
+that **`max_depth=4` is too shallow for this cohort by about six thousandths of
+ρ**, reproducibly, on every one of fifteen folds — and the champion's depth had
+never been set by a measurement on this cohort, since it is inherited from the
+baseline script and the LightGBM search varied LightGBM's own depth alongside
+`num_leaves`. **It is not adopted:** +0.0063 is smaller than the +0.0087 adaptive
+component on these same folds, the freeze is the whole point of Part 4, and a
+six-thousandth gain on the cohort the configuration was selected against is
+exactly what a sealed holdout removes. It is recorded as the first place to look
+if the freeze is ever lifted.
 
 **So, does the project need the other eleven?** No, and the reason is worth
 stating in proportion. The whole measured span of hyperparameter tuning here is
-**+0.0131** (627 LightGBM draws), of which **+0.0087 is adaptive inflation**;
-eight model classes span 0.108 ρ; the selection budget is worth ±0.0005; and one
-feature family is worth **+0.164**. Hyperparameters are a hundredth-scale knob on
-a problem whose open variance is 0.22 ρ. The one place they are not is a
-*different dataset*: on the human matrix, depth and learning rate are worth
-**+0.10**, and `max_depth` 4 → 6 alone is **+0.0585** against +0.0063 here. Tuning
-buys insurance against a change of signal shape, not a better number on a signal
-you have already fitted.
+**+0.0131**, of which **+0.0087 is adaptive inflation**; eight model classes span
+0.108 ρ; the selection budget is worth ±0.0005; and one feature family is worth
+**+0.164**. Hyperparameters are a hundredth-scale knob on a problem whose open
+variance is 0.22 ρ. The one place they are not is a *different dataset*: on the
+human matrix depth and learning rate are worth **+0.10**, and `max_depth` 4 → 6
+alone is **+0.0585** against +0.0063 here. Tuning buys insurance against a change
+of signal shape, not a better number on a signal already fitted.
 
 ### Does grouped cross-validation still mean the same thing after the cohort moved?
 
@@ -2360,7 +2292,11 @@ representations in full. The budget turns out not to bind — on the curated
 cohort, selecting 300 against using every column differs by ±0.0005 in both
 directions (Finding 1) — but the caveat had to be measured rather than waved
 away, and when it was, **the reduction itself stopped holding on the curated
-cohort**.
+cohort**. Every arm in the table above was then re-run with **no selection at
+all**, `n_features` set to each arm's own column count, which is what makes the
+tetramer result (−0.0019), the quantum-column result (+0.0114) and the
+non-inferiority failures statements about representations rather than about the
+selector.
 
 **B.2 — What is the model class worth?**
 
@@ -2412,22 +2348,6 @@ top two rows from the bottom six is not depth, recurrence or ensembling — it i
 **which columns the model is given**, since every row above reads the same 300.
 Representation decides the task; model class decides a tenth of a correlation
 (Finding 1).
-
-### Does the pipeline need a selector at all?
-
-**No, and the conclusions that matter do not go through it.** The 300-column
-selector is inherited from the baseline script, kept so ablations stay comparable
-to the frozen anchor, and it is a property of our pipeline rather than of the
-biology. It is also measurably free: 300 columns against every column differ by
-**±0.0005** in both directions (Finding 1).
-
-That matters for one specific objection. A statement like "tetramer columns do not
-help" could be an artefact of a selector that never picks them — and on the
-published matrix it *was* exactly that, which is Finding 4's whole point.
-**Every arm of the reduced-representation ladder above therefore runs with no
-selection at all**, `n_features` set to each arm's own column count. The tetramer
-result (−0.0019), the quantum-column result (+0.0114) and the non-inferiority
-failures are all selector-free, and so is the biology read off them.
 
 ### Why does boosting beat random forest, and ridge beat both forests?
 
@@ -2545,20 +2465,16 @@ gets delivered. "Representation beats information" was too strong: the honest
 version is that a *well-chosen* deterministic summary pays a constrained learner
 about a hundredth, and choosing it well is domain knowledge, not formatting.
 
-**That last sentence was itself refined two sections below**, once the column
-probe made it possible to ask *which* summaries are well chosen. It is not the
-physics that distinguishes them but the non-linearity: the random tables are
-linear and therefore cheap, and the columns that pay are the ones no shallow
-tree can reconstruct. See *Every family split the way `d_mechanics` was*.
-
-*Limit:* the random tables are linear sums over position-specific weights, which
-is exactly the class `b_energy`, `d_mechanics` and the quantum tables live in. A
-random *non-linear* function — the analogue of `c_folding`'s RNA folding — was
-not tested, so the null covers the class that produced three of the four
-measurements and not the fourth. That missing cell is now the single most
-informative run left in this line of work: it is what separates "the physics
-matters" from "only the non-linearity matters", and the family split below
-shows the non-linear columns are where the gain actually lives.
+**That last sentence is the one that survived**, and it survived a second
+control. The random tables are linear sums over position-specific weights, which
+is exactly the class `b_energy`, `d_mechanics` and the quantum tables live in —
+so for a while the reading was that linearity, not meaninglessness, was why they
+paid nothing, and that any function a shallow tree cannot reconstruct would do.
+Random **non-linear** functions of the guide, matched on out-of-fold
+recoverability to the real fold energy, say otherwise: +0.0001 to +0.0007 at
+every interaction order from 2 to 8, against +0.0117 for the real column (see
+*Every family split the way `d_mechanics` was*). Choosing the summary well is
+domain knowledge, and the domain is doing the work.
 
 ### Columns sorted by what the guide determines, instead of by family
 
@@ -2769,27 +2685,69 @@ by construction.) The independent evidence for the effect is therefore **two
 measurements, not three**: the spacer fold energy, and `d_mechanics`'s 20 cheap
 guide-only columns at +0.0113.
 
-**That reconciles the random-tables null instead of contradicting it.** The
-random tables were linear sums over position-specific weights, which loses
-twice: they carry no information *and* a tree can approximate them cheaply from
-the one-hot columns it already holds. `guide_selffold` loses once and wins once
-— no information, but no shallow tree is going to reconstruct a base-pairing
-partition function from indicators. So the axis is not physical against
-arbitrary, and it is not information against no information. It is
+**That reconciles the random-tables null instead of contradicting it — and the
+cell those two results leave empty has now been run.** The random tables were
+linear sums over position-specific weights, which loses twice: they carry no
+information *and* a tree can approximate them cheaply from the one-hot columns it
+already holds. `guide_selffold` loses only once, because no shallow tree is going
+to reconstruct a base-pairing partition function from indicators. That left one
+reading standing — that difficulty alone is what pays — and one cell untested: a
+random function that is **non-linear** rather than linear.
 
-> **cheap against expensive for this particular learner.**
+It has now been run, with recoverability measured rather than assumed
+(`redescription.py --arm nonlinear`, `results/redescription_nonlinear.csv`). A
+sum of 200 random weights over random position *tuples* is uninformative by
+construction and becomes arbitrarily expensive as the tuple size rises, with
+nothing else about it changing. Three independent draws at each order, one model
+seed, five folds:
 
-A random *non-linear* function of the guide is the missing cell of that table
-and has not been run; it is the test that would settle whether the physics
-matters at all or only the non-linearity. What can be said now is narrower than
-"representation beats information" and wider than the withdrawal that replaced
-it: **a deterministic function of the guide pays a depth-limited tree about a
-hundredth of ρ when, and only when, the tree cannot cheaply compute it**, and
-the four families that showed the effect each contain at least one such column.
+| random function of the guide | out-of-fold linear R² | Δρ |
+|---|---:|---:|
+| order 1 — the earlier random tables | 1.000 | +0.0001 |
+| order 2 | 0.402 | +0.0000 |
+| order 3 | 0.178 | +0.0002 |
+| order 4 | 0.075 | −0.0007 |
+| order 6 | −0.001 | +0.0007 |
+| order 8 | −0.008 | −0.0005 |
+| **real `eng.dg.guide_selffold`, for scale** | **0.316** | **+0.0117** |
 
-*Scope.* The strong version of this rests on `n = 1` column at +0.0116 and seven
-at +0.0113 in `c_folding`, on one cohort, with the usual 300-column budget
-competing underneath. It is a mechanism with a measurement attached, not a law.
+**Difficulty is dialled across the whole available range and the gain never
+moves.** The order-2 arms are the matched ones — individually R² 0.339, 0.383 and
+0.484 against the real column's 0.316 — and they buy −0.0004, −0.0002 and
++0.0007. No arm in the table is further than 0.0016 from zero, while a real fold
+energy of the same recoverability buys +0.0117. Order 1 reproduces the earlier
+random-tables null at +0.0001, which is the check that this instrument agrees
+with the one it extends.
+
+**So "cheap against expensive" was the wrong axis, and this retires it.** Being
+expensive for the tree is not sufficient, and the family table above says it is
+probably not necessary either: `b_energy`'s nine *cheap* columns are worth
++0.0131 as a block, about what its one expensive column is worth alone. What
+separates a function that pays from one that does not is whether it tracks the
+phenotype. `guide_selffold` carries a marginal \|ρ\| of **0.102** against the
+label; a random function of the guide carries none, by construction. So the
+statement this line of work can support is the one it started from, now with a
+matched control under it rather than an assumption:
+
+> **a deterministic function of the guide pays a depth-limited tree about a
+> hundredth of ρ when it names something the phenotype depends on, and nothing
+> at all otherwise, however expensive it is to compute.**
+
+Difficulty survives as a second-order ordering *among* the functions that
+qualify, and that is where the original observation was right: per column, the
+one expensive aligned column is worth +0.0116 where nine cheap aligned ones
+average +0.0015 each.
+
+*And it agrees with the shuffle, which is the stronger of the two controls.* The
+position-shuffled fold holds the algorithm, the energy model, the base
+composition **and** the difficulty fixed, and destroys only the correspondence
+between structure and guide; it is worth +0.0000 and −0.0007 (Part 2). Two
+different ways of removing the meaning while keeping the difficulty, and both are
+nulls.
+
+*Scope.* The positive side still rests on `n = 1` column at +0.0116 and seven at
++0.0113 in `c_folding`, on one cohort, with the usual 300-column budget competing
+underneath. It is a mechanism with a measurement attached, not a law.
 
 ### Does the human baseline reproduce ρ 0.472, and what produces it?
 
@@ -2920,28 +2878,18 @@ not an inability to fit.
 
 ### What other long-range features could be built without new data?
 
-From the genome alone: **GC skew** (strand-asymmetric, unlike GC content),
-**A-tract phasing** and **bendability periodicity** at the helical repeat
-(periodicity, not composition), **k-mer entropy**, **Chi sites**
-(`GCTGGTGG`, RecBCD hotspots), homopolymer run-length, REP element density. From
-RegulonDB, already on disk: **distance and orientation to the nearest annotated
-TSS, terminator and operon boundary** — the properly-annotated version of the
-nearest-gene proxy, and the highest-value item given Jacky's orientation
-result. From a teammate:
-distance to the nearest essential gene.
-
-The first three were built as family J and are a **null** (−0.001 alone, +0.0004
-on top of family A, with its permutation control scoring higher) despite passing
-the screen at median R² −0.022.
-
-**Chi sites have now been built too, and are also a null** — and that one was
-worth doing, because it was the only candidate on this list with a mechanism
-attached that predicted every observed property of the flank effect. It is
-tested in its own section below. Two of the three most mechanistically motivated
-long-range candidates are now excluded rather than unexamined, which makes the
-long-range asymmetry harder to explain, not easier. What remains unbuilt on this
-list is k-mer entropy, homopolymer run-length, REP density and the RegulonDB
-annotations, none of which carries a mechanism of its own.
+Two of the three most mechanistically motivated candidates have now been built
+and are nulls: **GC skew, A-tract phasing and bendability periodicity**, as
+family J (−0.001 alone, +0.0004 on top of family A, with its own permutation
+control scoring higher), and **Chi sites**, in the section below. That makes the
+long-range asymmetry harder to explain rather than easier — the candidates that
+came with a mechanism attached are now excluded rather than unexamined. What
+remains unbuilt is k-mer entropy, homopolymer run-length and REP density from the
+genome, and from RegulonDB the distance and orientation to the nearest annotated
+TSS, terminator and operon boundary. None of the first three carries a mechanism
+of its own; the RegulonDB items are the properly-annotated version of the
+nearest-gene proxy behind Jacky's orientation result, and so the highest-value
+thing left on this list.
 
 ### Is the flank effect a *repair* effect? The Chi-site test, and it is a null
 
@@ -3562,14 +3510,28 @@ and wider population.
 
 **They are not clean estimates of each family's biological contribution.** A
 family that supplies dense summaries is rewarded for its shape as well as its
-content on this base. *Partly separated, 13 October* (`base_enrichment.py`):
-giving the base 41 dense guide-only summary columns — `b_energy`, `c_folding` and
-`d_mechanics`'s protospacer half, none of which carries information beyond the
-20-mer — raises it from 0.5445 to 0.5692 and takes **0.013** off family A's
-gain, 8% of it. So column shape accounts for a small part of the inflation and
-the row population accounts for most of it (Appendix B2a). What is still unrun is
-the same test with the *published* matrix's 63 hand-named columns rather than
-this 41-column stand-in.
+content on this base. Separated two ways, and both say the shape is worth little.
+On the curated cohort (`base_enrichment.py`), giving the base 41 dense guide-only
+summary columns — `b_energy`, `c_folding` and `d_mechanics`'s protospacer half,
+none of which carries information beyond the 20-mer — raises it from 0.5445 to
+0.5692 and takes **0.013** off family A's gain, 8% of it.
+
+That was a stand-in, because the published matrix's own 63 hand-named summaries
+— guide GC, Tm, k-mer counts, PAM indicators — exist on the 13,880-row cohort and
+nowhere else. Run there, where the two bases differ by exactly those 63 columns
+(`base_enrichment.py --published`, `results/base_enrichment_published.csv`):
+
+| base | columns | ρ | + family A | Δ |
+|---|---:|---:|---:|---:|
+| sparse: indicators + quantum tables | 6,169 | 0.5227 | 0.6050 | **+0.0823** |
+| the same, plus the 63 hand-named | 6,232 | 0.5272 | 0.6080 | **+0.0808** |
+
+**The real summaries take +0.0015 off family A's gain, 1.8% of it** — less than
+the stand-in suggested, not more. The second base's 0.5272 reproduces Finding 1's
+0.52716 for the full published matrix through a different code path, which is
+what certifies the two arms differ only by those columns. So column shape is not
+where the published-to-curated tripling comes from, and the row population
+accounts for essentially all of it (Appendix B2a).
 
 ### The joint arms: the column must not be added up, and here is by how much
 

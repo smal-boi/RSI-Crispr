@@ -22,8 +22,18 @@ and the family average hides it. `column_taxonomy()` replaces the folder with a
 measurement: regress every one of the 668 family columns on the guide's own
 one-hot encoding out of fold, and split by how well the guide predicts it.
 
+**Third, and this is the one that settled it: is difficulty the point, or
+meaning?** `random_tables()` builds functions that are meaningless *and* linear,
+so they lose twice and the null cannot say which loss did it. `random_nonlinear()`
+removes the second loss and keeps the first -- random weights over random
+position tuples, uninformative by construction and arbitrarily expensive as the
+tuple size rises -- with out-of-fold recoverability measured per arm so the ones
+genuinely matched to the real fold energy can be named. They are null at every
+order. Difficulty without meaning buys nothing.
+
     python -m sgrna.redescription --arm random
     python -m sgrna.redescription --arm taxonomy
+    python -m sgrna.redescription --arm nonlinear
 """
 
 from __future__ import annotations
@@ -216,11 +226,93 @@ def column_taxonomy(hi=0.99, lo=0.50, verbose=True):
     return out
 
 
+# The missing cell of the cheap/expensive table, and the one the report named as
+# unrun. `random_tables` built functions that are uninformative *and* cheap
+# (linear sums over position weights) and they pay nothing. Real folding is
+# uninformative and expensive, and pays +0.0119. The random-energy Nussinov arm
+# was meant to be uninformative-and-expensive, but its out-of-fold linear
+# recoverability came back at 0.391-0.855 against the real column's 0.316 -- a
+# random 4x4 table usually has one dominant pair type, so the minimisation
+# collapses to counting it. It was never actually expensive.
+#
+# This builds the cell properly. A sum of `n_terms` random weights over random
+# position *tuples* of a given order is uninformative by construction and gets
+# arbitrarily expensive as the order rises, with nothing else changing: same
+# inputs, same shape, same single column. Recoverability is measured rather than
+# assumed, so the arms that are genuinely matched to 0.316 can be named.
+NONLINEAR_OUT = config.RESULTS / "redescription_nonlinear.csv"
+
+
+def _random_interaction(code: np.ndarray, order: int, rng,
+                        n_terms: int = 200) -> np.ndarray:
+    """Sum of random weights over random position tuples of one interaction order.
+
+    Order 1 reproduces `random_tables`'s position-weight sum, which is the
+    internal check that this instrument agrees with the earlier one.
+    """
+    n, L = code.shape
+    out = np.zeros(n, dtype=np.float32)
+    for _ in range(n_terms):
+        pos = rng.choice(L, size=min(order, L), replace=False)
+        w = rng.normal(size=(4,) * len(pos)).astype(np.float32)
+        out += w[tuple(code[:, q] for q in pos)]
+    return out
+
+
+def random_nonlinear(orders=(1, 2, 3, 4, 6, 8), table_seeds=(0, 1, 2),
+                     model_seeds=(41,), verbose=True):
+    """Does non-linearity alone pay, or does the function have to mean something?"""
+    X, y, names, protos = _base()
+    seqs20 = np.array([str(q)[:20].upper().ljust(20, "A") for q in protos])
+    code = np.searchsorted(BASES, np.array([list(q) for q in seqs20]))
+    A = _onehot(protos, order=2)          # the same design matrix as 0.316
+
+    base_rho, base_sd = _cv(X, y, seeds=model_seeds)
+    rows = [dict(arm="base", order=-1, table_seed=-1, n_terms=0,
+                 oof_r2=np.nan, spearman=base_rho, spearman_sd=base_sd,
+                 d_spearman=0.0)]
+    if verbose:
+        print(f"  base: rho {base_rho:.4f}", flush=True)
+
+    def add(label, order, ts, col):
+        col = np.asarray(col, dtype=np.float32).reshape(-1, 1)
+        r2 = float(_oof_r2(col.astype(np.float64), A)[0])
+        rho, sd = _cv(np.hstack([X, col]), y, seeds=model_seeds)
+        rows.append(dict(arm=label, order=order, table_seed=ts,
+                         n_terms=0 if order < 0 else 200, oof_r2=r2,
+                         spearman=rho, spearman_sd=sd,
+                         d_spearman=rho - base_rho))
+        if verbose:
+            print(f"  {label:34s}: R2 {r2:6.3f}  rho {rho:.4f}  "
+                  f"d {rho - base_rho:+.4f}", flush=True)
+        pd.DataFrame(rows).to_csv(NONLINEAR_OUT, index=False)
+
+    # The reference the controls have to be matched against, recomputed here so
+    # it is measured on the same folds and the same design matrix as the rest.
+    vb, fnb = _block("b_energy", protos)
+    add("real eng.dg.guide_selffold", -1, -1,
+        vb[:, list(fnb).index("eng.dg.guide_selffold")])
+
+    for order in orders:
+        for ts in table_seeds:
+            add(f"random order {order} (table {ts})", order, ts,
+                _random_interaction(code, order, np.random.default_rng(ts)))
+
+    out = pd.DataFrame(rows)
+    if verbose:
+        print("\n  mean gain by interaction order (and mean recoverability):")
+        for order, g in out[out.order > 0].groupby("order"):
+            print(f"    order {order}: d {g.d_spearman.mean():+.4f}  "
+                  f"R2 {g.oof_r2.mean():.3f}")
+        print(f"written -> {NONLINEAR_OUT}")
+    return out
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--arm", default="both",
                     choices=["random", "taxonomy", "families", "provenance",
-                             "folds", "both"])
+                             "folds", "nonlinear", "both"])
     a = ap.parse_args(argv)
     if a.arm in ("taxonomy", "both"):
         column_taxonomy()
@@ -232,6 +324,8 @@ def main(argv=None) -> int:
         provenance_split()
     if a.arm == "folds":
         random_folds()
+    if a.arm == "nonlinear":
+        random_nonlinear()
     return 0
 
 
